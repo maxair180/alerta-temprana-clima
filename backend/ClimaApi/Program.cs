@@ -16,6 +16,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // SignalR y Servicios de Negocio
 builder.Services.AddSignalR();
 builder.Services.AddScoped<AlertaService>();
+builder.Services.AddHostedService<SimuladorSensoresService>();
 
 // CORS para permitir peticiones desde Angular
 builder.Services.AddCors(options =>
