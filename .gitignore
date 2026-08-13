@@ -1,0 +1,17 @@
+# .NET / C#
+bin/
+obj/
+.vs/
+*.user
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+
+# Entorno y SO
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
