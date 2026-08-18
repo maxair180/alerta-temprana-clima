@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # 1. BASE DE DATOS: SQL Server 2022+ en Linux Container
+  # ===========================================================================
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: clima_sqlserver
+    restart: always
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=ClimaDB_Secure2026!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    networks:
+      - clima_network
+
+volumes:
+  sql_data:
+    driver: local
+
+networks:
+  clima_network:
+    driver: bridge
