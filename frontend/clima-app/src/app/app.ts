@@ -14,13 +14,16 @@ import { Subscription } from 'rxjs';
 export class App implements OnInit, OnDestroy {
   public pestanaActiva: 'dashboard' | 'alertas' | 'historial' | 'admin' | 'bitacora' = 'dashboard';
 
-  // Autenticación - CAMPOS LIMPIOS SIN DATOS POR DEFECTO
+  // Autenticación
   public usuarioActual: UsuarioAuth | null = null;
   public loginForm = {
     correo: '',
     contrasenia: ''
   };
   public loginError: string = '';
+
+  // Notificación de éxito flotante
+  public mensajeExito: string | null = null;
 
   // Datos
   public sensores: SensorModel[] = [];
@@ -37,16 +40,10 @@ export class App implements OnInit, OnDestroy {
   public filtroComunidadMapa: string = 'TODAS';
   public sensorSeleccionadoGraficoId: number = 1;
 
-  // ======================== PAGINACIÓN (SEGURIDAD Y RENDIMIENTO) ========================
+  // Paginación
   public itemsPorPagina: number = 5;
-  
-  // Paginación Alertas
   public paginaActualAlertas: number = 1;
-  
-  // Paginación Historial
   public paginaActualHistorial: number = 1;
-
-  // Paginación Bitácora
   public paginaActualBitacora: number = 1;
 
   // Estado general de la comunidad
@@ -149,13 +146,8 @@ export class App implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
-  // =========================================================================
-  // AUTENTICACIÓN SEGURA (SANITIZACIÓN CONTRA INYECCIONES)
-  // =========================================================================
   public ejecutarLogin() {
     this.loginError = '';
-    
-    // Sanitización básica de inputs
     const correoLimpio = (this.loginForm.correo || '').trim().toLowerCase();
     const claveLimpia = (this.loginForm.contrasenia || '').trim();
 
@@ -168,7 +160,6 @@ export class App implements OnInit, OnDestroy {
     if (!exito) {
       this.loginError = 'Credenciales inválidas. Verifica tu correo y contraseña.';
     } else {
-      // Limpiar formulario al ingresar
       this.loginForm = { correo: '', contrasenia: '' };
     }
   }
@@ -218,9 +209,16 @@ export class App implements OnInit, OnDestroy {
     this.alertaEmergente = null;
   }
 
+  // Reinicio con notificación visual emergente
   public reiniciarSistema() {
-    if (confirm('¿Estás seguro de reiniciar el sistema de monitoreo? Esto restablecerá todos los sensores al estado normal y limpiará las alertas activas mediante procedimiento parametrizado.')) {
+    if (confirm('¿Deseas reiniciar el sistema de monitoreo?')) {
       this.climaService.reiniciarSistemaMonitoreo();
+      this.mensajeExito = '¡Sistema de monitoreo reiniciado correctamente! Todos los sensores están activos y las alertas fueron limpiadas.';
+      
+      // Ocultar notificación automáticamente después de 5 segundos
+      setTimeout(() => {
+        this.mensajeExito = null;
+      }, 5000);
     }
   }
 
@@ -228,9 +226,7 @@ export class App implements OnInit, OnDestroy {
     this.climaService.simularEventoExtremo(tipo);
   }
 
-  // =========================================================================
-  // GETTERS CON FILTROS Y PAGINACIÓN OPTIMIZADA
-  // =========================================================================
+  // Getters de paginación
   public get alertasFiltradas(): AlertaModel[] {
     if (this.filtroNivelAlerta === 'TODOS') return this.alertas;
     return this.alertas.filter(a => a.nivelRiesgo === this.filtroNivelAlerta);
@@ -268,7 +264,6 @@ export class App implements OnInit, OnDestroy {
     return Math.ceil(this.bitacora.length / this.itemsPorPagina) || 1;
   }
 
-  // Métodos de control de paginación
   public cambiarPaginaAlertas(delta: number) {
     const nueva = this.paginaActualAlertas + delta;
     if (nueva >= 1 && nueva <= this.totalPaginasAlertas) {

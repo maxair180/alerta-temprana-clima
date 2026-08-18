@@ -64,6 +64,18 @@
 @else {
   <div class="app-layout">
 
+    <!-- ======================== NOTIFICACIÓN FLOTANTE DE ÉXITO ======================== -->
+    @if (mensajeExito) {
+      <div class="success-toast">
+        <span class="toast-icon-check">✅</span>
+        <div class="toast-content">
+          <p class="toast-title-success">Sistema Reiniciado</p>
+          <p class="toast-msg">{{ mensajeExito }}</p>
+        </div>
+        <button class="btn-close-toast" (click)="mensajeExito = null">✕</button>
+      </div>
+    }
+
     <!-- ======================== TOAST DE ALERTA EMERGENTE ======================== -->
     @if (alertaEmergente) {
       <div class="emergency-toast" [ngClass]="'toast-' + alertaEmergente.nivelRiesgo.toLowerCase()">
@@ -374,7 +386,7 @@
                   <div class="river-path"></div>
                   <div class="lake-zone">LAGO DE AMATITLÁN / CUENCA HÍDRICA</div>
 
-                  <!-- PINES DE SENSORES CON ETIQUETAS DE UBICACIÓN PERMANENTES -->
+                  <!-- PINES DE SENSORES CON ETIQUETAS PERMANENTES -->
                   @for (sensor of sensoresFiltradosMapa; track sensor.id) {
                     <div 
                       class="map-pin" 
@@ -382,7 +394,6 @@
                       [style.top]="obtenerPosicionMapa(sensor).top"
                       [style.left]="obtenerPosicionMapa(sensor).left">
                       
-                      <!-- ETIQUETA VISIBLE PERMANENTE DE LA UBICACIÓN -->
                       <div class="pin-name-badge">
                         <span class="pin-muni-name">📍 {{ sensor.comunidad }}</span>
                         <span class="pin-metric-val">{{ sensor.valorActual }} {{ sensor.unidadMedida }}</span>
@@ -414,7 +425,7 @@
       }
 
       <!-- ===================================================================
-           PESTAÑA 2: CENTRO DE ALERTAS (CON PAGINACIÓN)
+           PESTAÑA 2: CENTRO DE ALERTAS
            =================================================================== -->
       @if (pestanaActiva === 'alertas') {
         <div class="view-panel">
@@ -485,7 +496,6 @@
               </table>
             </div>
 
-            <!-- CONTROLES DE PAGINACIÓN ALERTAS -->
             <div class="pagination-footer">
               <span class="pagination-info">
                 Página <strong>{{ paginaActualAlertas }}</strong> de <strong>{{ totalPaginasAlertas }}</strong> (Total: {{ alertasFiltradas.length }} alertas)
@@ -511,7 +521,7 @@
       }
 
       <!-- ===================================================================
-           PESTAÑA 3: HISTORIAL DE EVENTOS (CON PAGINACIÓN)
+           PESTAÑA 3: HISTORIAL DE EVENTOS
            =================================================================== -->
       @if (pestanaActiva === 'historial') {
         <div class="view-panel">
@@ -575,7 +585,6 @@
               </table>
             </div>
 
-            <!-- CONTROLES DE PAGINACIÓN HISTORIAL -->
             <div class="pagination-footer">
               <span class="pagination-info">
                 Página <strong>{{ paginaActualHistorial }}</strong> de <strong>{{ totalPaginasHistorial }}</strong> (Total: {{ historialFiltrado.length }} eventos)
@@ -665,10 +674,10 @@
             </table>
           </div>
 
+          <!-- ZONA LIMPIA DE REINICIO DEL SISTEMA (SIN TEXTO TÉCNICO INNECESARIO) -->
           <div class="danger-zone-card">
             <div class="danger-info">
-              <h3>⚠️ Procedimiento Parametrizado de Reinicio</h3>
-              <p>Ejecuta el procedimiento seguro <code>sp_ReiniciarMonitoreo</code> para reiniciar los sensores a estado activo y limpiar alertas previas.</p>
+              <h3>Restablecimiento General de Monitoreo</h3>
             </div>
             <button class="btn-danger-large" (click)="reiniciarSistema()">
               🔄 Reiniciar Sistema de Monitoreo
@@ -678,7 +687,7 @@
       }
 
       <!-- ===================================================================
-           PESTAÑA 5: BITÁCORA DE AUDITORÍA (CON PAGINACIÓN)
+           PESTAÑA 5: BITÁCORA DE AUDITORÍA
            =================================================================== -->
       @if (pestanaActiva === 'bitacora') {
         <div class="view-panel">
@@ -718,7 +727,6 @@
             </table>
           </div>
 
-          <!-- CONTROLES DE PAGINACIÓN BITÁCORA -->
           <div class="pagination-footer">
             <span class="pagination-info">
               Página <strong>{{ paginaActualBitacora }}</strong> de <strong>{{ totalPaginasBitacora }}</strong> (Total: {{ bitacora.length }} registros)

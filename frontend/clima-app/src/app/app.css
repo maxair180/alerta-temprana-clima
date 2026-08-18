@@ -11,6 +11,35 @@
               var(--bg-primary);
 }
 
+/* ======================== NOTIFICACIÓN FLOTANTE DE ÉXITO ======================== */
+.success-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  border-left: 5px solid var(--color-verde);
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.35), 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  animation: slideDown 0.3s ease;
+  max-width: 480px;
+}
+
+.toast-icon-check {
+  font-size: 1.6rem;
+}
+
+.toast-title-success {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-verde);
+}
+
 /* ======================== PANTALLA DE LOGIN ======================== */
 .login-page {
   min-height: 100vh;
@@ -840,10 +869,10 @@
   justify-content: center;
 }
 
-/* DANGER ZONE */
+/* ======================== DANGER ZONE LIMPIA ======================== */
 .danger-zone-card {
   margin-top: 32px;
-  padding: 20px;
+  padding: 20px 24px;
   background: rgba(239, 68, 68, 0.05);
   border: 1px solid rgba(239, 68, 68, 0.25);
   border-radius: 12px;
@@ -854,17 +883,27 @@
   gap: 14px;
 }
 
-.danger-info h3 { font-size: 0.95rem; font-weight: 700; color: #fca5a5; }
-.danger-info p { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+.danger-info h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fca5a5;
+}
+
 .btn-danger-large {
   background: var(--color-rojo);
   color: white;
   border: none;
-  padding: 10px 18px;
+  padding: 10px 20px;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.btn-danger-large:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
 }
 
 /* ======================== MODAL ======================== */
