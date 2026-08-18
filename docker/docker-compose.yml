@@ -19,6 +19,43 @@ services:
     networks:
       - clima_network
 
+  # ===========================================================================
+  # 2. BACKEND: C# .NET Web API + SignalR + BackgroundService
+  # ===========================================================================
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: clima_backend
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=database,1433;Database=ClimaDB;User Id=sa;Password=ClimaDB_Secure2026!;TrustServerCertificate=True;
+    ports:
+      - "5000:8080"
+    depends_on:
+      - database
+    networks:
+      - clima_network
+
+  # ===========================================================================
+  # 3. FRONTEND: Angular SPA Dashboard en Nginx
+  # ===========================================================================
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: clima_frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - clima_network
+
 volumes:
   sql_data:
     driver: local
