@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ClimaService, SensorModel, AlertaModel, HistorialEventoModel, BitacoraModel } from './services/clima.service';
+import { ClimaService, SensorModel, AlertaModel, HistorialEventoModel, BitacoraModel, UsuarioAuth } from './services/clima.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -14,6 +14,15 @@ import { Subscription } from 'rxjs';
 export class App implements OnInit, OnDestroy {
   public pestanaActiva: 'dashboard' | 'alertas' | 'historial' | 'admin' | 'bitacora' = 'dashboard';
 
+  // Autenticación
+  public usuarioActual: UsuarioAuth | null = null;
+  public loginForm = {
+    correo: 'ccachinm@miumg.edu.gt',
+    contrasenia: 'admin123'
+  };
+  public loginError: string = '';
+
+  // Datos
   public sensores: SensorModel[] = [];
   public alertas: AlertaModel[] = [];
   public historial: HistorialEventoModel[] = [];
@@ -25,16 +34,35 @@ export class App implements OnInit, OnDestroy {
   // Filtros
   public filtroNivelAlerta: string = 'TODOS';
   public filtroFenomeno: string = 'TODOS';
+  public filtroComunidadMapa: string = 'TODAS';
   public sensorSeleccionadoGraficoId: number = 1;
 
   // Estado general de la comunidad
   public estadoComunidad: 'Normal' | 'Precaucion' | 'Alerta' | 'Emergencia' = 'Normal';
 
-  // Modal para agregar sensor
+  // Modal para agregar sensor con aldeas de Villa Canales
   public modalAgregarSensor: boolean = false;
+  public aldeasVillaCanales: string[] = [
+    'Boca del Monte',
+    'El Tablón',
+    'Chichimecas',
+    'Colmenas',
+    'El Durazno',
+    'El Zapote',
+    'El Porvenir',
+    'Santa Rosita',
+    'Santa Elena Barillas',
+    'Los Dolores',
+    'Los Pocitos',
+    'El Obrajuelo',
+    'El Jocotillo',
+    'Otra Comunidad Rural'
+  ];
+
   public nuevoSensor: {
     nombre: string;
     tipoSensor: 'Temperatura' | 'Humedad' | 'Viento' | 'Lluvia' | 'NivelRio';
+    comunidad: string;
     ubicacion: string;
     unidadMedida: string;
     valorMinimo: number;
@@ -42,6 +70,7 @@ export class App implements OnInit, OnDestroy {
   } = {
     nombre: '',
     tipoSensor: 'Temperatura',
+    comunidad: 'Santa Elena Barillas',
     ubicacion: '',
     unidadMedida: '°C',
     valorMinimo: 10,
@@ -53,6 +82,12 @@ export class App implements OnInit, OnDestroy {
   constructor(public climaService: ClimaService) {}
 
   ngOnInit() {
+    this.subs.add(
+      this.climaService.usuarioActual$.subscribe(usuario => {
+        this.usuarioActual = usuario;
+      })
+    );
+
     this.subs.add(
       this.climaService.sensores$.subscribe(sensores => {
         this.sensores = sensores;
@@ -99,6 +134,30 @@ export class App implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subs.unsubscribe();
+  }
+
+  // Login
+  public ejecutarLogin() {
+    this.loginError = '';
+    const exito = this.climaService.login(this.loginForm.correo, this.loginForm.contrasenia);
+    if (!exito) {
+      this.loginError = 'Credenciales inválidas. Usa ccachinm@miumg.edu.gt (clave: admin123) o selecciona un acceso rápido.';
+    }
+  }
+
+  public loginRapido(rol: 'admin' | 'operador') {
+    if (rol === 'admin') {
+      this.loginForm.correo = 'ccachinm@miumg.edu.gt';
+      this.loginForm.contrasenia = 'admin123';
+    } else {
+      this.loginForm.correo = 'operador@miumg.edu.gt';
+      this.loginForm.contrasenia = 'operador123';
+    }
+    this.ejecutarLogin();
+  }
+
+  public cerrarSesion() {
+    this.climaService.logout();
   }
 
   private calcularEstadoComunidad() {
@@ -160,7 +219,45 @@ export class App implements OnInit, OnDestroy {
     return this.historial.filter(h => h.tipoFenomeno === this.filtroFenomeno);
   }
 
-  // Generador de puntos SVG para el gráfico de evolución temporal
+  public get comunidadesUnicas(): string[] {
+    const list = Array.from(new Set(this.sensores.map(s => s.comunidad)));
+    return ['TODAS', ...list];
+  }
+
+  public get sensoresFiltradosMapa(): SensorModel[] {
+    if (this.filtroComunidadMapa === 'TODAS') return this.sensores;
+    return this.sensores.filter(s => s.comunidad === this.filtroComunidadMapa);
+  }
+
+  // Coordenadas relativas en el mapa de Villa Canales según aldea
+  public obtenerPosicionMapa(sensor: SensorModel): { top: string; left: string } {
+    const mapaCoordenadas: { [key: string]: { top: number; left: number } } = {
+      'Boca del Monte': { top: 12, left: 55 },
+      'El Tablón': { top: 28, left: 42 },
+      'Chichimecas': { top: 22, left: 62 },
+      'Colmenas': { top: 32, left: 70 },
+      'El Durazno': { top: 38, left: 64 },
+      'El Zapote': { top: 34, left: 38 },
+      'El Porvenir': { top: 18, left: 74 },
+      'Santa Rosita': { top: 48, left: 50 },
+      'Santa Elena Barillas': { top: 56, left: 60 },
+      'Los Dolores': { top: 68, left: 45 },
+      'Los Pocitos': { top: 76, left: 35 },
+      'El Obrajuelo': { top: 86, left: 48 },
+      'El Jocotillo': { top: 72, left: 78 }
+    };
+
+    if (mapaCoordenadas[sensor.comunidad]) {
+      const coord = mapaCoordenadas[sensor.comunidad];
+      return { top: `${coord.top}%`, left: `${coord.left}%` };
+    }
+
+    // Posición dinámica si es una comunidad nueva
+    const offsetTop = 20 + ((sensor.id * 17) % 65);
+    const offsetLeft = 25 + ((sensor.id * 23) % 55);
+    return { top: `${offsetTop}%`, left: `${offsetLeft}%` };
+  }
+
   public generarPuntosSvg(lecturas: number[], ancho: number = 600, alto: number = 180): string {
     if (!lecturas || lecturas.length < 2) return '';
     const min = Math.min(...lecturas) * 0.9;
@@ -176,34 +273,39 @@ export class App implements OnInit, OnDestroy {
     return puntos.join(' ');
   }
 
+  public actualizarUnidadSegunTipo() {
+    if (this.nuevoSensor.tipoSensor === 'Temperatura') this.nuevoSensor.unidadMedida = '°C';
+    if (this.nuevoSensor.tipoSensor === 'Humedad') this.nuevoSensor.unidadMedida = '%';
+    if (this.nuevoSensor.tipoSensor === 'Viento') this.nuevoSensor.unidadMedida = 'km/h';
+    if (this.nuevoSensor.tipoSensor === 'Lluvia') this.nuevoSensor.unidadMedida = 'mm';
+    if (this.nuevoSensor.tipoSensor === 'NivelRio') this.nuevoSensor.unidadMedida = 'm';
+  }
+
   public agregarNuevoSensor() {
-    if (!this.nuevoSensor.nombre || !this.nuevoSensor.ubicacion) {
-      alert('Por favor completa todos los campos del sensor.');
+    if (!this.nuevoSensor.nombre || !this.nuevoSensor.comunidad) {
+      alert('Por favor ingresa el nombre y selecciona la comunidad del sensor.');
       return;
     }
 
-    let unidad = '°C';
-    if (this.nuevoSensor.tipoSensor === 'Humedad') unidad = '%';
-    if (this.nuevoSensor.tipoSensor === 'Viento') unidad = 'km/h';
-    if (this.nuevoSensor.tipoSensor === 'Lluvia') unidad = 'mm';
-    if (this.nuevoSensor.tipoSensor === 'NivelRio') unidad = 'm';
+    this.actualizarUnidadSegunTipo();
 
     const nuevo: SensorModel = {
       id: Date.now(),
       nombre: this.nuevoSensor.nombre,
       codigoIdentificador: `SENS-${this.nuevoSensor.tipoSensor.toUpperCase().substring(0, 4)}-0${this.sensores.length + 1}`,
-      ubicacion: this.nuevoSensor.ubicacion,
-      latitud: 14.6300 + (Math.random() - 0.5) * 0.02,
-      longitud: -90.5050 + (Math.random() - 0.5) * 0.02,
+      comunidad: this.nuevoSensor.comunidad,
+      ubicacion: this.nuevoSensor.ubicacion || `Aldea ${this.nuevoSensor.comunidad}, Villa Canales`,
+      latitud: 14.4500 + (Math.random() - 0.5) * 0.05,
+      longitud: -90.5100 + (Math.random() - 0.5) * 0.05,
       tipoSensor: this.nuevoSensor.tipoSensor,
-      unidadMedida: unidad,
+      unidadMedida: this.nuevoSensor.unidadMedida,
       valorMinimo: this.nuevoSensor.valorMinimo,
       valorMaximo: this.nuevoSensor.valorMaximo,
-      valorActual: (this.nuevoSensor.valorMinimo + this.nuevoSensor.valorMaximo) / 2,
+      valorActual: Number(((this.nuevoSensor.valorMinimo + this.nuevoSensor.valorMaximo) / 2).toFixed(1)),
       estado: true,
       nivelRiesgoActual: 'Verde',
-      mensajeActual: 'Sensor configurado e instalado.',
-      fechaInstalacion: new Date().toISOString(),
+      mensajeActual: `Sensor instalado en ${this.nuevoSensor.comunidad} y operando en rango normal.`,
+      fechaInstalacion: new Date().toLocaleDateString('es-GT'),
       historialLecturas: [this.nuevoSensor.valorMinimo, (this.nuevoSensor.valorMinimo + this.nuevoSensor.valorMaximo) / 2]
     };
 
@@ -212,13 +314,14 @@ export class App implements OnInit, OnDestroy {
     this.climaService.registrarEnBitacora(
       'Nuevo Sensor Agregado',
       'Sensores',
-      `Sensor ${nuevo.nombre} (${nuevo.codigoIdentificador}) registrado exitosamente.`
+      `Sensor ${nuevo.nombre} (${nuevo.codigoIdentificador}) registrado en la comunidad de ${nuevo.comunidad}.`
     );
 
     this.modalAgregarSensor = false;
     this.nuevoSensor = {
       nombre: '',
       tipoSensor: 'Temperatura',
+      comunidad: 'Santa Elena Barillas',
       ubicacion: '',
       unidadMedida: '°C',
       valorMinimo: 10,

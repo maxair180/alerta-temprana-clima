@@ -2,641 +2,749 @@
      CLIMASAFE RURAL - SISTEMA DE MONITOREO Y ALERTA TEMPRANA (ANGULAR 20+)
      ======================================================================== -->
 
-<div class="app-layout">
-
-  <!-- ======================== TOAST DE ALERTA EMERGENTE ======================== -->
-  @if (alertaEmergente) {
-    <div class="emergency-toast" [ngClass]="'toast-' + alertaEmergente.nivelRiesgo.toLowerCase()">
-      <div class="toast-icon">
-        @if (alertaEmergente.nivelRiesgo === 'Rojo') { 🚨 }
-        @else if (alertaEmergente.nivelRiesgo === 'Naranja') { ⚠️ }
-        @else { 📢 }
-      </div>
-      <div class="toast-content">
-        <div class="toast-header">
-          <span class="badge" [ngClass]="'badge-' + alertaEmergente.nivelRiesgo.toLowerCase()">
-            ALERTA {{ alertaEmergente.nivelRiesgo }}
-          </span>
-          <span class="toast-time">{{ alertaEmergente.fechaHora }}</span>
-        </div>
-        <p class="toast-title">{{ alertaEmergente.sensorNombre }} ({{ alertaEmergente.valorRegistrado }} {{ alertaEmergente.unidadMedida }})</p>
-        <p class="toast-msg">{{ alertaEmergente.mensaje }}</p>
-      </div>
-      <div class="toast-actions">
-        <button class="btn-attend" (click)="atenderAlerta(alertaEmergente.id)">Atender</button>
-        <button class="btn-close-toast" (click)="cerrarAlertaEmergente()">✕</button>
-      </div>
-    </div>
-  }
-
-  <!-- ======================== HEADER / BARRA SUPERIOR ======================== -->
-  <header class="top-navbar">
-    <div class="nav-brand">
-      <div class="brand-logo">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
-        </svg>
-      </div>
-      <div class="brand-text">
-        <h1>ClimaSafe <span>Rural</span></h1>
-        <p>Sistema de Alerta Temprana & Monitoreo 2026</p>
-      </div>
-    </div>
-
-    <!-- Indicador de Estado y Acciones Rápidas -->
-    <div class="nav-controls">
-      <!-- Indicador SignalR -->
-      <div class="connection-status" [class.online]="conectadoSignalR" [class.simulated]="!conectadoSignalR">
-        <span class="pulse-circle"></span>
-        <span>{{ conectadoSignalR ? 'SignalR En Vivo' : 'Modo Simulación Activo' }}</span>
-      </div>
-
-      <!-- Botón de Silencio / Audio -->
-      <button class="btn-icon" (click)="toggleSonido()" [title]="sonidoHabilitado ? 'Silenciar alarmas' : 'Activar alarmas sonoras'">
-        @if (sonidoHabilitado) {
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+<!-- ======================== PANTALLA DE LOGIN (AUTENTICACIÓN) ======================== -->
+@if (!usuarioActual) {
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
           </svg>
-        } @else {
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-            <line x1="23" y1="9" x2="17" y2="15"/>
-            <line x1="17" y1="9" x2="23" y2="15"/>
-          </svg>
-        }
-      </button>
-
-      <!-- Selector de Simulación de Emergencia para Demostración -->
-      <div class="demo-selector">
-        <button class="btn-demo" (click)="simularEvento('Inundacion')">🌊 Inundación</button>
-        <button class="btn-demo" (click)="simularEvento('Incendio')">🔥 Incendio</button>
-        <button class="btn-demo" (click)="simularEvento('Tormenta')">🌪️ Tormenta</button>
-        <button class="btn-demo" (click)="simularEvento('Helada')">❄️ Helada</button>
-      </div>
-
-      <!-- Perfil de Usuario -->
-      <div class="user-pill">
-        <div class="avatar">CF</div>
-        <div class="user-info">
-          <span class="user-name">Carlos Cachin</span>
-          <span class="user-role">Administrador</span>
         </div>
+        <h2>ClimaSafe <span>Rural</span></h2>
+        <p>Sistema de Monitoreo y Alerta Temprana para Riesgos Climáticos</p>
+        <span class="badge-muni">📍 Municipio de Villa Canales, Guatemala</span>
       </div>
-    </div>
-  </header>
 
-  <!-- ======================== NAVEGACIÓN POR PESTAÑAS (SEGMENTED CONTROL) ======================== -->
-  <nav class="sub-nav">
-    <div class="tabs-container">
-      <button class="tab-btn" [class.active]="pestanaActiva === 'dashboard'" (click)="pestanaActiva = 'dashboard'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
-        </svg>
-        <span>Dashboard</span>
-      </button>
-
-      <button class="tab-btn" [class.active]="pestanaActiva === 'alertas'" (click)="pestanaActiva = 'alertas'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-        </svg>
-        <span>Alertas</span>
-        @if (alertas.length > 0) {
-          <span class="tab-badge">{{ alertas.length }}</span>
-        }
-      </button>
-
-      <button class="tab-btn" [class.active]="pestanaActiva === 'historial'" (click)="pestanaActiva = 'historial'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/>
-          <path d="M12 7v5l4 2"/>
-        </svg>
-        <span>Historial de Fenómenos</span>
-      </button>
-
-      <button class="tab-btn" [class.active]="pestanaActiva === 'admin'" (click)="pestanaActiva = 'admin'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
-        <span>Administración</span>
-      </button>
-
-      <button class="tab-btn" [class.active]="pestanaActiva === 'bitacora'" (click)="pestanaActiva = 'bitacora'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-        </svg>
-        <span>Bitácora</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- ======================== CONTENIDO PRINCIPAL ======================== -->
-  <main class="main-content">
-
-    <!-- ===================================================================
-         PESTAÑA 1: DASHBOARD DE MONITOREO CLIMÁTICO (5 VARIABLES OBLIGATORIAS)
-         =================================================================== -->
-    @if (pestanaActiva === 'dashboard') {
-      <div class="view-dashboard">
-
-        <!-- Banner de Estado Global de la Comunidad -->
-        <div class="community-banner" [ngClass]="'banner-' + estadoComunidad.toLowerCase()">
-          <div class="banner-info">
-            <div class="banner-badge">
-              <span class="status-dot"></span>
-              ESTADO DE LA COMUNIDAD: <strong>{{ estadoComunidad.toUpperCase() }}</strong>
-            </div>
-            <h2>Monitoreo en Tiempo Real - Aldea La Laguna y Cuencas</h2>
-            <p>5 estaciones meteorológicas activas transmitiendo cada 6 segundos vía WebSockets.</p>
+      <form (ngSubmit)="ejecutarLogin()" class="login-form">
+        @if (loginError) {
+          <div class="alert-error">
+            <span>⚠️ {{ loginError }}</span>
           </div>
-          <div class="banner-quick-actions">
-            <button class="btn-outline-white" (click)="reiniciarSistema()">
-              🔄 Reiniciar Monitoreo
+        }
+
+        <div class="form-group">
+          <label>Correo Electrónico Institucional</label>
+          <input 
+            type="email" 
+            [(ngModel)]="loginForm.correo" 
+            name="correo" 
+            placeholder="ccachinm@miumg.edu.gt" 
+            required
+            class="form-input text-dark">
+        </div>
+
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input 
+            type="password" 
+            [(ngModel)]="loginForm.contrasenia" 
+            name="contrasenia" 
+            placeholder="••••••••" 
+            required
+            class="form-input text-dark">
+        </div>
+
+        <button type="submit" class="btn-login-submit">
+          Ingresar al Sistema
+        </button>
+
+        <div class="login-quick-access">
+          <span>Accesos rápidos de evaluación:</span>
+          <div class="quick-btns">
+            <button type="button" class="btn-quick" (click)="loginRapido('admin')">
+              👑 Carlos Cachin (Admin)
+            </button>
+            <button type="button" class="btn-quick" (click)="loginRapido('operador')">
+              👷 Operador de Monitoreo
             </button>
           </div>
         </div>
+      </form>
+    </div>
+  </div>
+}
 
-        <!-- 5 TARJETAS DE SENSORES EN TIEMPO REAL -->
-        <section class="sensors-grid">
-          @for (sensor of sensores; track sensor.id) {
-            <div class="sensor-card" [ngClass]="'card-risk-' + sensor.nivelRiesgoActual.toLowerCase()" [class.inactive]="!sensor.estado">
-              
-              <!-- Encabezado de la Tarjeta -->
-              <div class="card-header">
-                <div class="sensor-title-group">
-                  <div class="sensor-type-icon">
-                    @if (sensor.tipoSensor === 'Temperatura') { 🌡️ }
-                    @else if (sensor.tipoSensor === 'Humedad') { 💧 }
-                    @else if (sensor.tipoSensor === 'Viento') { 💨 }
-                    @else if (sensor.tipoSensor === 'Lluvia') { 🌧️ }
-                    @else if (sensor.tipoSensor === 'NivelRio') { 🌊 }
-                  </div>
-                  <div>
-                    <h3>{{ sensor.nombre }}</h3>
-                    <span class="sensor-code">{{ sensor.codigoIdentificador }} • {{ sensor.ubicacion }}</span>
-                  </div>
-                </div>
+<!-- ======================== APLICACIÓN PRINCIPAL (AUTENTICADA) ======================== -->
+@else {
+  <div class="app-layout">
 
-                <!-- Badge de Nivel de Riesgo -->
-                <span class="badge" [ngClass]="'badge-' + sensor.nivelRiesgoActual.toLowerCase()">
-                  {{ sensor.nivelRiesgoActual }}
-                </span>
-              </div>
+    <!-- ======================== TOAST DE ALERTA EMERGENTE ======================== -->
+    @if (alertaEmergente) {
+      <div class="emergency-toast" [ngClass]="'toast-' + alertaEmergente.nivelRiesgo.toLowerCase()">
+        <div class="toast-icon">
+          @if (alertaEmergente.nivelRiesgo === 'Rojo') { 🚨 }
+          @else if (alertaEmergente.nivelRiesgo === 'Naranja') { ⚠️ }
+          @else { 📢 }
+        </div>
+        <div class="toast-content">
+          <div class="toast-header">
+            <span class="badge" [ngClass]="'badge-' + alertaEmergente.nivelRiesgo.toLowerCase()">
+              ALERTA {{ alertaEmergente.nivelRiesgo }}
+            </span>
+            <span class="toast-time">{{ alertaEmergente.fechaHora }}</span>
+          </div>
+          <p class="toast-title">{{ alertaEmergente.sensorNombre }} ({{ alertaEmergente.valorRegistrado }} {{ alertaEmergente.unidadMedida }})</p>
+          <p class="toast-comunidad">📍 {{ alertaEmergente.comunidad }}, Villa Canales</p>
+          <p class="toast-msg">{{ alertaEmergente.mensaje }}</p>
+        </div>
+        <div class="toast-actions">
+          <button class="btn-attend" (click)="atenderAlerta(alertaEmergente.id)">Atender</button>
+          <button class="btn-close-toast" (click)="cerrarAlertaEmergente()">✕</button>
+        </div>
+      </div>
+    }
 
-              <!-- Valor Principal y Medida -->
-              <div class="card-body">
-                <div class="value-display">
-                  <span class="value-number">{{ sensor.valorActual }}</span>
-                  <span class="value-unit">{{ sensor.unidadMedida }}</span>
-                </div>
+    <!-- ======================== HEADER / NAVBAR ======================== -->
+    <header class="top-navbar">
+      <div class="nav-brand">
+        <div class="brand-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>ClimaSafe <span>Rural</span></h1>
+          <p>Villa Canales • Monitoreo y Alerta Temprana 2026</p>
+        </div>
+      </div>
 
-                <!-- Sparkline SVG (Mini Gráfico en Vivo) -->
-                <div class="sparkline-container">
-                  <svg viewBox="0 0 160 40" class="sparkline-svg">
-                    <polyline
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      [attr.points]="generarPuntosSvg(sensor.historialLecturas, 160, 40)"
-                    />
-                  </svg>
-                </div>
-              </div>
+      <!-- Controles y Perfil -->
+      <div class="nav-controls">
+        <!-- Indicador SignalR -->
+        <div class="connection-status" [class.online]="conectadoSignalR" [class.simulated]="!conectadoSignalR">
+          <span class="pulse-circle"></span>
+          <span class="hide-mobile">{{ conectadoSignalR ? 'SignalR En Vivo' : 'Simulación Activa' }}</span>
+        </div>
 
-              <!-- Rango Seguro y Mensaje -->
-              <div class="card-footer">
-                <div class="safe-range">
-                  <span>Rango Seguro:</span>
-                  <strong>{{ sensor.valorMinimo }} - {{ sensor.valorMaximo }} {{ sensor.unidadMedida }}</strong>
-                </div>
-                <p class="sensor-msg">{{ sensor.mensajeActual }}</p>
-              </div>
-
-            </div>
+        <!-- Botón de Audio -->
+        <button class="btn-icon" (click)="toggleSonido()" [title]="sonidoHabilitado ? 'Silenciar alarmas' : 'Activar alarmas sonoras'">
+          @if (sonidoHabilitado) {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            </svg>
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <line x1="23" y1="9" x2="17" y2="15"/>
+              <line x1="17" y1="9" x2="23" y2="15"/>
+            </svg>
           }
-        </section>
+        </button>
 
-        <!-- SECCIÓN INFERIOR: EVOLUCIÓN TEMPORAL + MAPA DE LA COMUNIDAD -->
-        <div class="dashboard-bottom-grid">
+        <!-- Demostración Rápida de Eventos Extremos -->
+        <div class="demo-selector hide-mobile">
+          <button class="btn-demo" (click)="simularEvento('Inundacion')">🌊 Inundación</button>
+          <button class="btn-demo" (click)="simularEvento('Incendio')">🔥 Incendio</button>
+          <button class="btn-demo" (click)="simularEvento('Tormenta')">🌪️ Tormenta</button>
+          <button class="btn-demo" (click)="simularEvento('Helada')">❄️ Helada</button>
+        </div>
 
-          <!-- 1. Gráfico de Evolución Temporal -->
-          <div class="panel-card chart-panel">
-            <div class="panel-header">
-              <div>
-                <h3>Evolución de Lecturas (Tiempo Real)</h3>
-                <p>Historial dinámico de las últimas mediciones</p>
+        <!-- Perfil y Logout -->
+        <div class="user-pill">
+          <div class="avatar">{{ usuarioActual.nombre.substring(0, 2).toUpperCase() }}</div>
+          <div class="user-info hide-mobile">
+            <span class="user-name">{{ usuarioActual.nombre }}</span>
+            <span class="user-role">{{ usuarioActual.rol }}</span>
+          </div>
+          <button class="btn-logout" (click)="cerrarSesion()" title="Cerrar sesión">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ======================== TABS DE NAVEGACIÓN (RESPONSIVE) ======================== -->
+    <nav class="sub-nav">
+      <div class="tabs-container">
+        <button class="tab-btn" [class.active]="pestanaActiva === 'dashboard'" (click)="pestanaActiva = 'dashboard'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="tab-btn" [class.active]="pestanaActiva === 'alertas'" (click)="pestanaActiva = 'alertas'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+          </svg>
+          <span>Alertas</span>
+          @if (alertas.length > 0) {
+            <span class="tab-badge">{{ alertas.length }}</span>
+          }
+        </button>
+
+        <button class="tab-btn" [class.active]="pestanaActiva === 'historial'" (click)="pestanaActiva = 'historial'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/>
+            <path d="M12 7v5l4 2"/>
+          </svg>
+          <span>Historial de Eventos</span>
+        </button>
+
+        <button class="tab-btn" [class.active]="pestanaActiva === 'admin'" (click)="pestanaActiva = 'admin'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span>Administración</span>
+        </button>
+
+        <button class="tab-btn" [class.active]="pestanaActiva === 'bitacora'" (click)="pestanaActiva = 'bitacora'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span>Bitácora</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ======================== CONTENIDO PRINCIPAL ======================== -->
+    <main class="main-content">
+
+      <!-- ===================================================================
+           PESTAÑA 1: DASHBOARD DE MONITOREO CLIMÁTICO
+           =================================================================== -->
+      @if (pestanaActiva === 'dashboard') {
+        <div class="view-dashboard">
+
+          <!-- Banner de Estado de la Comunidad -->
+          <div class="community-banner" [ngClass]="'banner-' + estadoComunidad.toLowerCase()">
+            <div class="banner-info">
+              <div class="banner-badge">
+                <span class="status-dot"></span>
+                ESTADO MUNICIPAL: <strong>{{ estadoComunidad.toUpperCase() }}</strong>
               </div>
-
-              <!-- Selector de Sensor para el Gráfico -->
-              <div class="sensor-select-pills">
-                @for (s of sensores; track s.id) {
-                  <button 
-                    class="pill-btn" 
-                    [class.active]="sensorSeleccionadoGraficoId === s.id"
-                    (click)="sensorSeleccionadoGraficoId = s.id">
-                    {{ s.tipoSensor }}
-                  </button>
-                }
-              </div>
+              <h2>Monitoreo en Tiempo Real - Villa Canales</h2>
+              <p>Red de estaciones meteorológicas en cuencas, valles y cerros de Villa Canales transmitiendo en vivo.</p>
             </div>
-
-            <div class="chart-wrapper">
-              @if (sensorGrafico) {
-                <div class="chart-legend-info">
-                  <span class="legend-val">{{ sensorGrafico.valorActual }} {{ sensorGrafico.unidadMedida }}</span>
-                  <span class="legend-desc">{{ sensorGrafico.nombre }}</span>
-                </div>
-
-                <!-- Gráfico SVG Interactivo con Curvas Suaves -->
-                <svg viewBox="0 0 600 180" class="main-chart-svg">
-                  <defs>
-                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.4"/>
-                      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.0"/>
-                    </linearGradient>
-                  </defs>
-
-                  <!-- Líneas de cuadrícula -->
-                  <line x1="0" y1="45" x2="600" y2="45" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4"/>
-                  <line x1="0" y1="90" x2="600" y2="90" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4"/>
-                  <line x1="0" y1="135" x2="600" y2="135" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4"/>
-
-                  <!-- Curva de Datos -->
-                  <polyline
-                    fill="none"
-                    stroke="#3b82f6"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    [attr.points]="generarPuntosSvg(sensorGrafico.historialLecturas, 600, 180)"
-                  />
-                </svg>
-              }
+            <div class="banner-quick-actions">
+              <button class="btn-outline-white" (click)="reiniciarSistema()">
+                🔄 Reiniciar Monitoreo
+              </button>
             </div>
           </div>
 
-          <!-- 2. Mapa Interactivo de la Comunidad Rural -->
-          <div class="panel-card map-panel">
-            <div class="panel-header">
-              <div>
-                <h3>Mapa de la Comunidad Rural</h3>
-                <p>Ubicación geográfica de estaciones y cuencas</p>
-              </div>
-              <span class="badge badge-verde">5 Sensores GPS</span>
-            </div>
-
-            <div class="community-map-container">
-              <!-- Fondo de Mapa Vectorial Topográfico -->
-              <div class="map-grid-layer">
-                <div class="river-path"></div>
-                <div class="valley-zone">Valle Agrícola San Pedro</div>
-                <div class="mountain-zone">Cerro El Vigía (1,850m)</div>
-                <div class="dam-zone">Represa El Porvenir</div>
-
-                <!-- Marcadores de Sensores en el Mapa -->
-                @for (sensor of sensores; track sensor.id) {
-                  <div 
-                    class="map-pin" 
-                    [ngClass]="'pin-risk-' + sensor.nivelRiesgoActual.toLowerCase()"
-                    [style.top]="(30 + (sensor.id * 12)) + '%'"
-                    [style.left]="(15 + (sensor.id * 16)) + '%'"
-                    [title]="sensor.nombre + ' (' + sensor.valorActual + ' ' + sensor.unidadMedida + ')'">
-                    
-                    <span class="pin-pulse"></span>
-                    <div class="pin-icon">
+          <!-- TARJETAS DE SENSORES EN TIEMPO REAL -->
+          <section class="sensors-grid">
+            @for (sensor of sensores; track sensor.id) {
+              <div class="sensor-card" [ngClass]="'card-risk-' + sensor.nivelRiesgoActual.toLowerCase()" [class.inactive]="!sensor.estado">
+                
+                <div class="card-header">
+                  <div class="sensor-title-group">
+                    <div class="sensor-type-icon">
                       @if (sensor.tipoSensor === 'Temperatura') { 🌡️ }
                       @else if (sensor.tipoSensor === 'Humedad') { 💧 }
                       @else if (sensor.tipoSensor === 'Viento') { 💨 }
                       @else if (sensor.tipoSensor === 'Lluvia') { 🌧️ }
                       @else if (sensor.tipoSensor === 'NivelRio') { 🌊 }
                     </div>
-                    <div class="pin-tooltip">
-                      <strong>{{ sensor.nombre }}</strong>
-                      <span>{{ sensor.valorActual }} {{ sensor.unidadMedida }} ({{ sensor.nivelRiesgoActual }})</span>
+                    <div>
+                      <h3>{{ sensor.nombre }}</h3>
+                      <span class="sensor-code">📍 {{ sensor.comunidad }} • {{ sensor.codigoIdentificador }}</span>
                     </div>
                   </div>
+
+                  <span class="badge" [ngClass]="'badge-' + sensor.nivelRiesgoActual.toLowerCase()">
+                    {{ sensor.nivelRiesgoActual }}
+                  </span>
+                </div>
+
+                <div class="card-body">
+                  <div class="value-display">
+                    <span class="value-number">{{ sensor.valorActual }}</span>
+                    <span class="value-unit">{{ sensor.unidadMedida }}</span>
+                  </div>
+
+                  <div class="sparkline-container">
+                    <svg viewBox="0 0 160 40" class="sparkline-svg">
+                      <polyline
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        [attr.points]="generarPuntosSvg(sensor.historialLecturas, 160, 40)"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                <div class="card-footer">
+                  <div class="safe-range">
+                    <span>Rango Seguro:</span>
+                    <strong>{{ sensor.valorMinimo }} - {{ sensor.valorMaximo }} {{ sensor.unidadMedida }}</strong>
+                  </div>
+                  <p class="sensor-msg">{{ sensor.mensajeActual }}</p>
+                </div>
+
+              </div>
+            }
+          </section>
+
+          <!-- SECCIÓN INFERIOR: EVOLUCIÓN TEMPORAL + MAPA DE VILLA CANALES -->
+          <div class="dashboard-bottom-grid">
+
+            <!-- 1. Gráfico de Evolución Temporal -->
+            <div class="panel-card chart-panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Evolución de Datos en Tiempo Real</h3>
+                  <p>Dinámica de lecturas de la estación seleccionada</p>
+                </div>
+
+                <div class="sensor-select-pills">
+                  @for (s of sensores; track s.id) {
+                    <button 
+                      class="pill-btn" 
+                      [class.active]="sensorSeleccionadoGraficoId === s.id"
+                      (click)="sensorSeleccionadoGraficoId = s.id">
+                      {{ s.tipoSensor }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <div class="chart-wrapper">
+                @if (sensorGrafico) {
+                  <div class="chart-legend-info">
+                    <span class="legend-val">{{ sensorGrafico.valorActual }} {{ sensorGrafico.unidadMedida }}</span>
+                    <span class="legend-desc">{{ sensorGrafico.nombre }} ({{ sensorGrafico.comunidad }})</span>
+                  </div>
+
+                  <svg viewBox="0 0 600 180" class="main-chart-svg">
+                    <defs>
+                      <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.4"/>
+                        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.0"/>
+                      </linearGradient>
+                    </defs>
+
+                    <line x1="0" y1="45" x2="600" y2="45" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4"/>
+                    <line x1="0" y1="90" x2="600" y2="90" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4"/>
+                    <line x1="0" y1="135" x2="600" y2="135" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4"/>
+
+                    <polyline
+                      fill="none"
+                      stroke="#3b82f6"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      [attr.points]="generarPuntosSvg(sensorGrafico.historialLecturas, 600, 180)"
+                    />
+                  </svg>
                 }
               </div>
             </div>
+
+            <!-- 2. Mapa Georreferenciado Oficial de Villa Canales -->
+            <div class="panel-card map-panel">
+              <div class="panel-header">
+                <div>
+                  <h3>Mapa Municipal de Villa Canales</h3>
+                  <p>Ubicación de sensores en aldeas y sectores geográficos</p>
+                </div>
+                
+                <div class="map-controls-group">
+                  <select [(ngModel)]="filtroComunidadMapa" class="select-community-filter text-dark">
+                    <option value="TODAS">📍 Todas las Aldeas ({{ sensores.length }})</option>
+                    @for (com of comunidadesUnicas; track com) {
+                      @if (com !== 'TODAS') {
+                        <option [value]="com">📍 {{ com }}</option>
+                      }
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <div class="villa-canales-map-container">
+                <!-- Capa de Mapa Vectorial Topográfico con Sectores de Villa Canales -->
+                <div class="map-grid-layer">
+                  
+                  <!-- Etiquetas Geográficas de Aldeas Principales de Villa Canales -->
+                  <div class="aldea-label label-boca">Boca del Monte (Norte)</div>
+                  <div class="aldea-label label-tablon">El Tablón</div>
+                  <div class="aldea-label label-porvenir">El Porvenir</div>
+                  <div class="aldea-label label-barillas">Santa Elena Barillas</div>
+                  <div class="aldea-label label-dolores">Los Dolores</div>
+                  <div class="aldea-label label-jocotillo">El Jocotillo (Sur)</div>
+                  <div class="aldea-label label-obrajuelo">El Obrajuelo</div>
+
+                  <!-- Río Villalobos y Cuenca -->
+                  <div class="river-path"></div>
+                  <div class="lake-zone">Lago de Amatitlán / Cuenca Hídrica</div>
+
+                  <!-- Marcadores Dinámicos de Sensores en el Mapa -->
+                  @for (sensor of sensoresFiltradosMapa; track sensor.id) {
+                    <div 
+                      class="map-pin" 
+                      [ngClass]="'pin-risk-' + sensor.nivelRiesgoActual.toLowerCase()"
+                      [style.top]="obtenerPosicionMapa(sensor).top"
+                      [style.left]="obtenerPosicionMapa(sensor).left">
+                      
+                      <span class="pin-pulse"></span>
+                      <div class="pin-icon">
+                        @if (sensor.tipoSensor === 'Temperatura') { 🌡️ }
+                        @else if (sensor.tipoSensor === 'Humedad') { 💧 }
+                        @else if (sensor.tipoSensor === 'Viento') { 💨 }
+                        @else if (sensor.tipoSensor === 'Lluvia') { 🌧️ }
+                        @else if (sensor.tipoSensor === 'NivelRio') { 🌊 }
+                      </div>
+                      <div class="pin-tooltip">
+                        <strong>{{ sensor.nombre }}</strong>
+                        <span class="tooltip-loc">📍 {{ sensor.comunidad }}</span>
+                        <span class="tooltip-val">{{ sensor.valorActual }} {{ sensor.unidadMedida }} ({{ sensor.nivelRiesgoActual }})</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
           </div>
 
         </div>
+      }
 
-      </div>
-    }
+      <!-- ===================================================================
+           PESTAÑA 2: CENTRO DE ALERTAS
+           =================================================================== -->
+      @if (pestanaActiva === 'alertas') {
+        <div class="view-panel">
+          <div class="view-header">
+            <div>
+              <h2>Centro de Alertas Climáticas</h2>
+              <p>Registro de condiciones meteorológicas fuera del rango seguro en Villa Canales</p>
+            </div>
 
-    <!-- ===================================================================
-         PESTAÑA 2: CENTRO DE ALERTAS
-         =================================================================== -->
-    @if (pestanaActiva === 'alertas') {
-      <div class="view-panel">
-        <div class="view-header">
-          <div>
-            <h2>Centro de Alertas Climáticas</h2>
-            <p>Registro en tiempo real de condiciones fuera de rango de seguridad</p>
+            <div class="filter-pills">
+              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'TODOS'" (click)="filtroNivelAlerta = 'TODOS'">Todos</button>
+              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Rojo'" (click)="filtroNivelAlerta = 'Rojo'">🔴 Rojo</button>
+              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Naranja'" (click)="filtroNivelAlerta = 'Naranja'">🟠 Naranja</button>
+              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Amarillo'" (click)="filtroNivelAlerta = 'Amarillo'">🟡 Amarillo</button>
+              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Verde'" (click)="filtroNivelAlerta = 'Verde'">🟢 Verde</button>
+            </div>
           </div>
 
-          <!-- Filtro por Nivel -->
-          <div class="filter-pills">
-            <button class="pill-btn" [class.active]="filtroNivelAlerta === 'TODOS'" (click)="filtroNivelAlerta = 'TODOS'">Todos</button>
-            <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Rojo'" (click)="filtroNivelAlerta = 'Rojo'">🔴 Rojo</button>
-            <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Naranja'" (click)="filtroNivelAlerta = 'Naranja'">🟠 Naranja</button>
-            <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Amarillo'" (click)="filtroNivelAlerta = 'Amarillo'">🟡 Amarillo</button>
-            <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Verde'" (click)="filtroNivelAlerta = 'Verde'">🟢 Verde</button>
-          </div>
+          @if (alertasFiltradas.length === 0) {
+            <div class="empty-state">
+              <p>✅ No hay alertas activas en este momento.</p>
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Nivel</th>
+                    <th>Sensor / Estación</th>
+                    <th>Comunidad / Aldea</th>
+                    <th>Valor</th>
+                    <th>Mensaje Descriptivo</th>
+                    <th>Fecha y Hora</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (alerta of alertasFiltradas; track alerta.id) {
+                    <tr>
+                      <td>
+                        <span class="badge" [ngClass]="'badge-' + alerta.nivelRiesgo.toLowerCase()">
+                          {{ alerta.nivelRiesgo }}
+                        </span>
+                      </td>
+                      <td><strong>{{ alerta.sensorNombre }}</strong></td>
+                      <td>📍 {{ alerta.comunidad }}</td>
+                      <td><strong>{{ alerta.valorRegistrado }} {{ alerta.unidadMedida }}</strong></td>
+                      <td>{{ alerta.mensaje }}</td>
+                      <td><code>{{ alerta.fechaHora }}</code></td>
+                      <td>
+                        @if (alerta.atendida) {
+                          <span class="status-tag attended">Atendida</span>
+                        } @else {
+                          <span class="status-tag pending">Pendiente</span>
+                        }
+                      </td>
+                      <td>
+                        @if (!alerta.atendida) {
+                          <button class="btn-sm-primary" (click)="atenderAlerta(alerta.id)">Atender</button>
+                        } @else {
+                          <span class="text-muted">Completada</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
         </div>
+      }
 
-        @if (alertasFiltradas.length === 0) {
-          <div class="empty-state">
-            <p>✅ No hay alertas en este momento con el filtro seleccionado.</p>
+      <!-- ===================================================================
+           PESTAÑA 3: HISTORIAL DE EVENTOS (FECHA Y HORA COMPLETAS)
+           =================================================================== -->
+      @if (pestanaActiva === 'historial') {
+        <div class="view-panel">
+          <div class="view-header">
+            <div>
+              <h2>Historial de Incidentes y Fenómenos</h2>
+              <p>Registro histórico con fecha y hora completa clasificado por fenómeno</p>
+            </div>
+
+            <div class="filter-pills">
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'TODOS'" (click)="filtroFenomeno = 'TODOS'">Todos</button>
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'Inundacion'" (click)="filtroFenomeno = 'Inundacion'">🌊 Inundación</button>
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'Sequia'" (click)="filtroFenomeno = 'Sequia'">☀️ Sequía</button>
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'Tormenta'" (click)="filtroFenomeno = 'Tormenta'">🌪️ Tormenta</button>
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'Helada'" (click)="filtroFenomeno = 'Helada'">❄️ Helada</button>
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'Incendio forestal'" (click)="filtroFenomeno = 'Incendio forestal'">🔥 Incendio</button>
+            </div>
           </div>
-        } @else {
-          <div class="table-container">
+
+          @if (historialFiltrado.length === 0) {
+            <div class="empty-state">
+              <p>ℹ️ No se registran incidentes del fenómeno seleccionado en el historial actual.</p>
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Fenómeno</th>
+                    <th>Nivel de Gravedad</th>
+                    <th>Estación de Detección</th>
+                    <th>Comunidad / Aldea</th>
+                    <th>Descripción del Evento</th>
+                    <th>Fecha y Hora Completa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of historialFiltrado; track item.id) {
+                    <tr>
+                      <td>
+                        <div class="phenomenon-tag">
+                          @if (item.tipoFenomeno === 'Inundacion') { 🌊 Inundación }
+                          @else if (item.tipoFenomeno === 'Sequia') { ☀️ Sequía }
+                          @else if (item.tipoFenomeno === 'Tormenta') { 🌪️ Tormenta }
+                          @else if (item.tipoFenomeno === 'Helada') { ❄️ Helada }
+                          @else if (item.tipoFenomeno === 'Incendio forestal') { 🔥 Incendio Forestal }
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge" [ngClass]="'badge-' + item.nivelGravedad.toLowerCase()">
+                          {{ item.nivelGravedad }}
+                        </span>
+                      </td>
+                      <td><strong>{{ item.sensorNombre }}</strong></td>
+                      <td>📍 {{ item.comunidad }}</td>
+                      <td>{{ item.descripcion }}</td>
+                      <td><code>{{ item.fechaHora }}</code></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ===================================================================
+           PESTAÑA 4: ADMINISTRACIÓN DE SENSORES Y COMUNIDADES
+           =================================================================== -->
+      @if (pestanaActiva === 'admin') {
+        <div class="view-panel">
+          <div class="view-header">
+            <div>
+              <h2>Administración de Sensores y Comunidades</h2>
+              <p>Escalabilidad de estaciones meteorológicas en el Municipio de Villa Canales</p>
+            </div>
+
+            <button class="btn-primary" (click)="modalAgregarSensor = true">
+              ➕ Agregar Nuevo Sensor
+            </button>
+          </div>
+
+          <div class="table-responsive">
             <table class="custom-table">
               <thead>
                 <tr>
-                  <th>Nivel</th>
-                  <th>Sensor / Estación</th>
-                  <th>Valor Registrado</th>
-                  <th>Mensaje Descriptivo</th>
-                  <th>Hora</th>
+                  <th>Código</th>
+                  <th>Nombre del Sensor</th>
+                  <th>Tipo</th>
+                  <th>Aldea / Comunidad</th>
+                  <th>Rango Seguro Mín / Máx</th>
+                  <th>Valor Actual</th>
                   <th>Estado</th>
                   <th>Acción</th>
                 </tr>
               </thead>
               <tbody>
-                @for (alerta of alertasFiltradas; track alerta.id) {
+                @for (sensor of sensores; track sensor.id) {
                   <tr>
+                    <td><code>{{ sensor.codigoIdentificador }}</code></td>
+                    <td><strong>{{ sensor.nombre }}</strong></td>
+                    <td>{{ sensor.tipoSensor }}</td>
+                    <td>📍 {{ sensor.comunidad }}</td>
                     <td>
-                      <span class="badge" [ngClass]="'badge-' + alerta.nivelRiesgo.toLowerCase()">
-                        {{ alerta.nivelRiesgo }}
+                      <div class="range-inputs">
+                        <input type="number" [(ngModel)]="sensor.valorMinimo" class="input-sm text-dark">
+                        <span>-</span>
+                        <input type="number" [(ngModel)]="sensor.valorMaximo" class="input-sm text-dark">
+                        <span class="text-muted">{{ sensor.unidadMedida }}</span>
+                      </div>
+                    </td>
+                    <td><strong>{{ sensor.valorActual }} {{ sensor.unidadMedida }}</strong></td>
+                    <td>
+                      <span class="status-tag" [class.attended]="sensor.estado" [class.pending]="!sensor.estado">
+                        {{ sensor.estado ? 'Activo' : 'Inactivo' }}
                       </span>
                     </td>
-                    <td><strong>{{ alerta.sensorNombre }}</strong></td>
-                    <td>{{ alerta.valorRegistrado }} {{ alerta.unidadMedida }}</td>
-                    <td>{{ alerta.mensaje }}</td>
-                    <td>{{ alerta.fechaHora }}</td>
                     <td>
-                      @if (alerta.atendida) {
-                        <span class="status-tag attended">Atendida</span>
-                      } @else {
-                        <span class="status-tag pending">Pendiente</span>
-                      }
-                    </td>
-                    <td>
-                      @if (!alerta.atendida) {
-                        <button class="btn-sm-primary" (click)="atenderAlerta(alerta.id)">Marcar Atendida</button>
-                      } @else {
-                        <span class="text-muted">Completada</span>
-                      }
+                      <button 
+                        class="btn-sm-outline"
+                        [class.btn-danger]="sensor.estado"
+                        (click)="toggleSensor(sensor.id)">
+                        {{ sensor.estado ? 'Desactivar' : 'Activar' }}
+                      </button>
                     </td>
                   </tr>
                 }
               </tbody>
             </table>
           </div>
-        }
-      </div>
-    }
 
-    <!-- ===================================================================
-         PESTAÑA 3: HISTORIAL DE FENÓMENOS (INUNDACIÓN, SEQUÍA, TORMENTA, ETC)
-         =================================================================== -->
-    @if (pestanaActiva === 'historial') {
-      <div class="view-panel">
-        <div class="view-header">
-          <div>
-            <h2>Historial de Fenómenos y Eventos</h2>
-            <p>Incidentes clasificados según la tipología oficial de riesgos climáticos</p>
-          </div>
-
-          <!-- Filtro por Tipo de Fenómeno -->
-          <div class="filter-pills">
-            <button class="pill-btn" [class.active]="filtroFenomeno === 'TODOS'" (click)="filtroFenomeno = 'TODOS'">Todos</button>
-            <button class="pill-btn" [class.active]="filtroFenomeno === 'Inundacion'" (click)="filtroFenomeno = 'Inundacion'">🌊 Inundación</button>
-            <button class="pill-btn" [class.active]="filtroFenomeno === 'Sequia'" (click)="filtroFenomeno = 'Sequia'">☀️ Sequía</button>
-            <button class="pill-btn" [class.active]="filtroFenomeno === 'Tormenta'" (click)="filtroFenomeno = 'Tormenta'">🌪️ Tormenta</button>
-            <button class="pill-btn" [class.active]="filtroFenomeno === 'Helada'" (click)="filtroFenomeno = 'Helada'">❄️ Helada</button>
-            <button class="pill-btn" [class.active]="filtroFenomeno === 'Incendio forestal'" (click)="filtroFenomeno = 'Incendio forestal'">🔥 Incendio</button>
+          <!-- Zona de Reinicio del Sistema -->
+          <div class="danger-zone-card">
+            <div class="danger-info">
+              <h3>⚠️ Procedimiento de Reinicio de Monitoreo</h3>
+              <p>Ejecuta el procedimiento <code>sp_ReiniciarMonitoreo</code> para reiniciar los sensores a estado activo y limpiar alertas previas.</p>
+            </div>
+            <button class="btn-danger-large" (click)="reiniciarSistema()">
+              🔄 Reiniciar Sistema de Monitoreo
+            </button>
           </div>
         </div>
+      }
 
-        @if (historialFiltrado.length === 0) {
-          <div class="empty-state">
-            <p>ℹ️ No se registran eventos del fenómeno seleccionado en el historial actual.</p>
+      <!-- ===================================================================
+           PESTAÑA 5: BITÁCORA DE AUDITORÍA
+           =================================================================== -->
+      @if (pestanaActiva === 'bitacora') {
+        <div class="view-panel">
+          <div class="view-header">
+            <div>
+              <h2>Bitácora de Acciones y Seguridad</h2>
+              <p>Registro inmutable de auditoría de usuarios y eventos en Villa Canales</p>
+            </div>
           </div>
-        } @else {
-          <div class="table-container">
+
+          <div class="table-responsive">
             <table class="custom-table">
               <thead>
                 <tr>
-                  <th>Fenómeno</th>
-                  <th>Gravedad</th>
-                  <th>Estación de Detección</th>
-                  <th>Descripción del Incidente</th>
+                  <th>Id</th>
+                  <th>Usuario Responsable</th>
+                  <th>Acción Realizada</th>
+                  <th>Módulo</th>
+                  <th>Detalles de la Operación</th>
+                  <th>Dirección IP</th>
                   <th>Fecha y Hora</th>
                 </tr>
               </thead>
               <tbody>
-                @for (item of historialFiltrado; track item.id) {
+                @for (log of bitacora; track log.id) {
                   <tr>
-                    <td>
-                      <div class="phenomenon-tag">
-                        @if (item.tipoFenomeno === 'Inundacion') { 🌊 Inundación }
-                        @else if (item.tipoFenomeno === 'Sequia') { ☀️ Sequía }
-                        @else if (item.tipoFenomeno === 'Tormenta') { 🌪️ Tormenta }
-                        @else if (item.tipoFenomeno === 'Helada') { ❄️ Helada }
-                        @else if (item.tipoFenomeno === 'Incendio forestal') { 🔥 Incendio Forestal }
-                      </div>
-                    </td>
-                    <td>
-                      <span class="badge" [ngClass]="'badge-' + item.nivelGravedad.toLowerCase()">
-                        {{ item.nivelGravedad }}
-                      </span>
-                    </td>
-                    <td><strong>{{ item.sensorNombre }}</strong></td>
-                    <td>{{ item.descripcion }}</td>
-                    <td>{{ item.fechaHora }}</td>
+                    <td>#{{ log.id }}</td>
+                    <td><strong>{{ log.usuarioNombre }}</strong></td>
+                    <td><span class="badge badge-verde">{{ log.accionRealizada }}</span></td>
+                    <td>{{ log.modulo }}</td>
+                    <td>{{ log.detalles }}</td>
+                    <td><code>{{ log.direccionIP }}</code></td>
+                    <td><code>{{ log.fechaHora }}</code></td>
                   </tr>
                 }
               </tbody>
             </table>
           </div>
-        }
-      </div>
-    }
+        </div>
+      }
 
-    <!-- ===================================================================
-         PESTAÑA 4: ADMINISTRACIÓN DE SENSORES Y SISTEMA
-         =================================================================== -->
-    @if (pestanaActiva === 'admin') {
-      <div class="view-panel">
-        <div class="view-header">
-          <div>
-            <h2>Panel de Administración de Sensores</h2>
-            <p>Control de estaciones meteorológicas, edición de umbrales y reinicio del sistema</p>
+    </main>
+
+    <!-- ======================== MODAL: AGREGAR NUEVO SENSOR ======================== -->
+    @if (modalAgregarSensor) {
+      <div class="modal-backdrop">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3>Nuevo Sensor Meteorológico</h3>
+            <button class="btn-close" (click)="modalAgregarSensor = false">✕</button>
           </div>
 
-          <button class="btn-primary" (click)="modalAgregarSensor = true">
-            ➕ Agregar Nuevo Sensor
-          </button>
-        </div>
-
-        <!-- Tabla de Administración de Sensores -->
-        <div class="table-container">
-          <table class="custom-table">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Nombre del Sensor</th>
-                <th>Tipo</th>
-                <th>Ubicación</th>
-                <th>Rango Mín / Máx</th>
-                <th>Valor Actual</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (sensor of sensores; track sensor.id) {
-                <tr>
-                  <td><code>{{ sensor.codigoIdentificador }}</code></td>
-                  <td><strong>{{ sensor.nombre }}</strong></td>
-                  <td>{{ sensor.tipoSensor }}</td>
-                  <td>{{ sensor.ubicacion }}</td>
-                  <td>
-                    <div class="range-inputs">
-                      <input type="number" [(ngModel)]="sensor.valorMinimo" class="input-sm">
-                      <span>-</span>
-                      <input type="number" [(ngModel)]="sensor.valorMaximo" class="input-sm">
-                      <span class="text-muted">{{ sensor.unidadMedida }}</span>
-                    </div>
-                  </td>
-                  <td><strong>{{ sensor.valorActual }} {{ sensor.unidadMedida }}</strong></td>
-                  <td>
-                    <span class="status-tag" [class.attended]="sensor.estado" [class.pending]="!sensor.estado">
-                      {{ sensor.estado ? 'Activo' : 'Inactivo' }}
-                    </span>
-                  </td>
-                  <td>
-                    <button 
-                      class="btn-sm-outline"
-                      [class.btn-danger]="sensor.estado"
-                      (click)="toggleSensor(sensor.id)">
-                      {{ sensor.estado ? 'Desactivar' : 'Activar' }}
-                    </button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Zona de Riesgo y Reinicio del Sistema (Requisito Administrativo) -->
-        <div class="danger-zone-card">
-          <div class="danger-info">
-            <h3>⚠️ Mantenimiento y Reinicio de Monitoreo</h3>
-            <p>Ejecuta el procedimiento <code>sp_ReiniciarMonitoreo</code> para reiniciar los sensores a estado activo y limpiar alertas previas.</p>
-          </div>
-          <button class="btn-danger-large" (click)="reiniciarSistema()">
-            🔄 Reiniciar Sistema de Monitoreo
-          </button>
-        </div>
-      </div>
-    }
-
-    <!-- ===================================================================
-         PESTAÑA 5: BITÁCORA DE ACCIONES Y AUDITORÍA
-         =================================================================== -->
-    @if (pestanaActiva === 'bitacora') {
-      <div class="view-panel">
-        <div class="view-header">
-          <div>
-            <h2>Bitácora de Acciones y Auditoría</h2>
-            <p>Registro inmutable de todas las operaciones realizadas por usuarios y el sistema</p>
-          </div>
-        </div>
-
-        <div class="table-container">
-          <table class="custom-table">
-            <thead>
-              <tr>
-                <th>Id</th>
-                <th>Usuario Responsable</th>
-                <th>Acción Realizada</th>
-                <th>Módulo</th>
-                <th>Detalles de la Operación</th>
-                <th>Dirección IP</th>
-                <th>Hora</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (log of bitacora; track log.id) {
-                <tr>
-                  <td>#{{ log.id }}</td>
-                  <td><strong>{{ log.usuarioNombre }}</strong></td>
-                  <td><span class="badge badge-verde">{{ log.accionRealizada }}</span></td>
-                  <td>{{ log.modulo }}</td>
-                  <td>{{ log.detalles }}</td>
-                  <td><code>{{ log.direccionIP }}</code></td>
-                  <td>{{ log.fechaHora }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    }
-
-  </main>
-
-  <!-- ======================== MODAL: AGREGAR NUEVO SENSOR ======================== -->
-  @if (modalAgregarSensor) {
-    <div class="modal-backdrop">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3>Nuevo Sensor Meteorológico</h3>
-          <button class="btn-close" (click)="modalAgregarSensor = false">✕</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Nombre de la Estación / Sensor</label>
-            <input type="text" [(ngModel)]="nuevoSensor.nombre" placeholder="Ej: Sensor Viento - Cerro Sur" class="form-input">
-          </div>
-          <div class="form-group">
-            <label>Tipo de Sensor</label>
-            <select [(ngModel)]="nuevoSensor.tipoSensor" class="form-input">
-              <option value="Temperatura">Temperatura (°C)</option>
-              <option value="Humedad">Humedad Relativa (%)</option>
-              <option value="Viento">Velocidad del Viento (km/h)</option>
-              <option value="Lluvia">Nivel de Lluvia (mm)</option>
-              <option value="NivelRio">Nivel de Río / Reservorio (m)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Ubicación en la Comunidad</label>
-            <input type="text" [(ngModel)]="nuevoSensor.ubicacion" placeholder="Ej: Sector Agrícola Este" class="form-input">
-          </div>
-          <div class="form-row">
+          <div class="modal-body">
             <div class="form-group">
-              <label>Umbral Mínimo Seguro</label>
-              <input type="number" [(ngModel)]="nuevoSensor.valorMinimo" class="form-input">
+              <label>Nombre de la Estación / Sensor</label>
+              <input 
+                type="text" 
+                [(ngModel)]="nuevoSensor.nombre" 
+                placeholder="Ej: Sensor Viento - Cerro El Vigía" 
+                class="form-input text-dark">
             </div>
+
             <div class="form-group">
-              <label>Umbral Máximo Seguro</label>
-              <input type="number" [(ngModel)]="nuevoSensor.valorMaximo" class="form-input">
+              <label>Tipo de Sensor</label>
+              <select [(ngModel)]="nuevoSensor.tipoSensor" (change)="actualizarUnidadSegunTipo()" class="form-input text-dark select-dark-options">
+                <option value="Temperatura">🌡️ Temperatura (°C)</option>
+                <option value="Humedad">💧 Humedad Relativa (%)</option>
+                <option value="Viento">💨 Velocidad del Viento (km/h)</option>
+                <option value="Lluvia">🌧️ Nivel de Lluvia (mm)</option>
+                <option value="NivelRio">🌊 Nivel de Río / Reservorio (m)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Comunidad / Aldea de Villa Canales</label>
+              <select [(ngModel)]="nuevoSensor.comunidad" class="form-input text-dark select-dark-options">
+                @for (aldea of aldeasVillaCanales; track aldea) {
+                  <option [value]="aldea">📍 {{ aldea }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Ubicación Detallada (Sector)</label>
+              <input 
+                type="text" 
+                [(ngModel)]="nuevoSensor.ubicacion" 
+                placeholder="Ej: Sector Agrícola Central, Finca San Jerónimo" 
+                class="form-input text-dark">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Umbral Mínimo Seguro ({{ nuevoSensor.unidadMedida }})</label>
+                <input type="number" [(ngModel)]="nuevoSensor.valorMinimo" class="form-input text-dark">
+              </div>
+              <div class="form-group">
+                <label>Umbral Máximo Seguro ({{ nuevoSensor.unidadMedida }})</label>
+                <input type="number" [(ngModel)]="nuevoSensor.valorMaximo" class="form-input text-dark">
+              </div>
             </div>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-outline-white" (click)="modalAgregarSensor = false">Cancelar</button>
-          <button class="btn-primary" (click)="agregarNuevoSensor()">Guardar Sensor</button>
+
+          <div class="modal-footer">
+            <button class="btn-outline-white" (click)="modalAgregarSensor = false">Cancelar</button>
+            <button class="btn-primary" (click)="agregarNuevoSensor()">Guardar Sensor</button>
+          </div>
         </div>
       </div>
-    </div>
-  }
+    }
 
-</div>
+  </div>
+}
