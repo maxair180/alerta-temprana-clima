@@ -2,7 +2,7 @@
      CLIMASAFE RURAL - SISTEMA DE MONITOREO Y ALERTA TEMPRANA (ANGULAR 20+)
      ======================================================================== -->
 
-<!-- ======================== PANTALLA DE LOGIN (AUTENTICACIÓN) ======================== -->
+<!-- ======================== PANTALLA DE LOGIN ======================== -->
 @if (!usuarioActual) {
   <div class="login-page">
     <div class="login-card">
@@ -110,15 +110,12 @@
         </div>
       </div>
 
-      <!-- Controles y Perfil -->
       <div class="nav-controls">
-        <!-- Indicador SignalR -->
         <div class="connection-status" [class.online]="conectadoSignalR" [class.simulated]="!conectadoSignalR">
           <span class="pulse-circle"></span>
           <span class="hide-mobile">{{ conectadoSignalR ? 'SignalR En Vivo' : 'Simulación Activa' }}</span>
         </div>
 
-        <!-- Botón de Audio -->
         <button class="btn-icon" (click)="toggleSonido()" [title]="sonidoHabilitado ? 'Silenciar alarmas' : 'Activar alarmas sonoras'">
           @if (sonidoHabilitado) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -135,7 +132,6 @@
           }
         </button>
 
-        <!-- Demostración Rápida de Eventos Extremos -->
         <div class="demo-selector hide-mobile">
           <button class="btn-demo" (click)="simularEvento('Inundacion')">🌊 Inundación</button>
           <button class="btn-demo" (click)="simularEvento('Incendio')">🔥 Incendio</button>
@@ -143,7 +139,6 @@
           <button class="btn-demo" (click)="simularEvento('Helada')">❄️ Helada</button>
         </div>
 
-        <!-- Perfil y Logout -->
         <div class="user-pill">
           <div class="avatar">{{ usuarioActual.nombre.substring(0, 2).toUpperCase() }}</div>
           <div class="user-info hide-mobile">
@@ -161,7 +156,7 @@
       </div>
     </header>
 
-    <!-- ======================== TABS DE NAVEGACIÓN (RESPONSIVE) ======================== -->
+    <!-- ======================== TABS DE NAVEGACIÓN ======================== -->
     <nav class="sub-nav">
       <div class="tabs-container">
         <button class="tab-btn" [class.active]="pestanaActiva === 'dashboard'" (click)="pestanaActiva = 'dashboard'">
@@ -214,7 +209,7 @@
       @if (pestanaActiva === 'dashboard') {
         <div class="view-dashboard">
 
-          <!-- Banner de Estado de la Comunidad -->
+          <!-- Banner de Estado Municipal -->
           <div class="community-banner" [ngClass]="'banner-' + estadoComunidad.toLowerCase()">
             <div class="banner-info">
               <div class="banner-badge">
@@ -247,7 +242,8 @@
                     </div>
                     <div>
                       <h3>{{ sensor.nombre }}</h3>
-                      <span class="sensor-code">📍 {{ sensor.comunidad }} • {{ sensor.codigoIdentificador }}</span>
+                      <!-- UBICACIÓN COMPLETA Y CÓDIGO VISIBLE -->
+                      <span class="sensor-code">📍 {{ sensor.ubicacion }} • {{ sensor.codigoIdentificador }}</span>
                     </div>
                   </div>
 
@@ -288,7 +284,7 @@
             }
           </section>
 
-          <!-- SECCIÓN INFERIOR: EVOLUCIÓN TEMPORAL + MAPA DE VILLA CANALES -->
+          <!-- SECCIÓN INFERIOR: EVOLUCIÓN TEMPORAL + MAPA OFICIAL DE VILLA CANALES -->
           <div class="dashboard-bottom-grid">
 
             <!-- 1. Gráfico de Evolución Temporal -->
@@ -315,7 +311,7 @@
                 @if (sensorGrafico) {
                   <div class="chart-legend-info">
                     <span class="legend-val">{{ sensorGrafico.valorActual }} {{ sensorGrafico.unidadMedida }}</span>
-                    <span class="legend-desc">{{ sensorGrafico.nombre }} ({{ sensorGrafico.comunidad }})</span>
+                    <span class="legend-desc">{{ sensorGrafico.nombre }} — {{ sensorGrafico.ubicacion }}</span>
                   </div>
 
                   <svg viewBox="0 0 600 180" class="main-chart-svg">
@@ -348,12 +344,12 @@
               <div class="panel-header">
                 <div>
                   <h3>Mapa Municipal de Villa Canales</h3>
-                  <p>Ubicación de sensores en aldeas y sectores geográficos</p>
+                  <p>Geolocalización oficial en las 13 Aldeas Municipales</p>
                 </div>
                 
                 <div class="map-controls-group">
                   <select [(ngModel)]="filtroComunidadMapa" class="select-community-filter text-dark">
-                    <option value="TODAS">📍 Todas las Aldeas ({{ sensores.length }})</option>
+                    <option value="TODAS">📍 Todas las Aldeas ({{ sensores.length }} Sensores)</option>
                     @for (com of comunidadesUnicas; track com) {
                       @if (com !== 'TODAS') {
                         <option [value]="com">📍 {{ com }}</option>
@@ -364,23 +360,28 @@
               </div>
 
               <div class="villa-canales-map-container">
-                <!-- Capa de Mapa Vectorial Topográfico con Sectores de Villa Canales -->
                 <div class="map-grid-layer">
                   
-                  <!-- Etiquetas Geográficas de Aldeas Principales de Villa Canales -->
-                  <div class="aldea-label label-boca">Boca del Monte (Norte)</div>
-                  <div class="aldea-label label-tablon">El Tablón</div>
-                  <div class="aldea-label label-porvenir">El Porvenir</div>
-                  <div class="aldea-label label-barillas">Santa Elena Barillas</div>
-                  <div class="aldea-label label-dolores">Los Dolores</div>
-                  <div class="aldea-label label-jocotillo">El Jocotillo (Sur)</div>
-                  <div class="aldea-label label-obrajuelo">El Obrajuelo</div>
+                  <!-- ETIQUETAS DE LAS 13 ALDEAS OFICIALES DE VILLA CANALES -->
+                  <div class="aldea-label label-boca">BOCA DEL MONTE (NORTE)</div>
+                  <div class="aldea-label label-porvenir">EL PORVENIR</div>
+                  <div class="aldea-label label-chichimecas">CHICHIMECAS</div>
+                  <div class="aldea-label label-tablon">EL TABLÓN</div>
+                  <div class="aldea-label label-colmenas">COLMENAS</div>
+                  <div class="aldea-label label-zapote">EL ZAPOTE</div>
+                  <div class="aldea-label label-durazno">EL DURAZNO</div>
+                  <div class="aldea-label label-rosita">SANTA ROSITA</div>
+                  <div class="aldea-label label-barillas">SANTA ELENA BARILLAS</div>
+                  <div class="aldea-label label-dolores">LOS DOLORES</div>
+                  <div class="aldea-label label-pocitos">LOS POCITOS</div>
+                  <div class="aldea-label label-jocotillo">EL JOCOTILLO (SUR)</div>
+                  <div class="aldea-label label-obrajuelo">EL OBRAJUELO</div>
 
-                  <!-- Río Villalobos y Cuenca -->
+                  <!-- Río y Cuenca -->
                   <div class="river-path"></div>
-                  <div class="lake-zone">Lago de Amatitlán / Cuenca Hídrica</div>
+                  <div class="lake-zone">LAGO DE AMATITLÁN / CUENCA HÍDRICA</div>
 
-                  <!-- Marcadores Dinámicos de Sensores en el Mapa -->
+                  <!-- PINES DE SENSORES CON ETIQUETAS DE UBICACIÓN PERMANENTES -->
                   @for (sensor of sensoresFiltradosMapa; track sensor.id) {
                     <div 
                       class="map-pin" 
@@ -388,6 +389,12 @@
                       [style.top]="obtenerPosicionMapa(sensor).top"
                       [style.left]="obtenerPosicionMapa(sensor).left">
                       
+                      <!-- ETIQUETA VISIBLE PERMANENTE DE LA UBICACIÓN -->
+                      <div class="pin-name-badge">
+                        <span class="pin-muni-name">📍 {{ sensor.comunidad }}</span>
+                        <span class="pin-metric-val">{{ sensor.valorActual }} {{ sensor.unidadMedida }}</span>
+                      </div>
+
                       <span class="pin-pulse"></span>
                       <div class="pin-icon">
                         @if (sensor.tipoSensor === 'Temperatura') { 🌡️ }
@@ -396,9 +403,10 @@
                         @else if (sensor.tipoSensor === 'Lluvia') { 🌧️ }
                         @else if (sensor.tipoSensor === 'NivelRio') { 🌊 }
                       </div>
+
                       <div class="pin-tooltip">
                         <strong>{{ sensor.nombre }}</strong>
-                        <span class="tooltip-loc">📍 {{ sensor.comunidad }}</span>
+                        <span class="tooltip-loc">📍 {{ sensor.ubicacion }}</span>
                         <span class="tooltip-val">{{ sensor.valorActual }} {{ sensor.unidadMedida }} ({{ sensor.nivelRiesgoActual }})</span>
                       </div>
                     </div>
@@ -488,7 +496,7 @@
       }
 
       <!-- ===================================================================
-           PESTAÑA 3: HISTORIAL DE EVENTOS (FECHA Y HORA COMPLETAS)
+           PESTAÑA 3: HISTORIAL DE EVENTOS
            =================================================================== -->
       @if (pestanaActiva === 'historial') {
         <div class="view-panel">
@@ -578,7 +586,7 @@
                   <th>Código</th>
                   <th>Nombre del Sensor</th>
                   <th>Tipo</th>
-                  <th>Aldea / Comunidad</th>
+                  <th>Ubicación / Aldea</th>
                   <th>Rango Seguro Mín / Máx</th>
                   <th>Valor Actual</th>
                   <th>Estado</th>
@@ -591,7 +599,7 @@
                     <td><code>{{ sensor.codigoIdentificador }}</code></td>
                     <td><strong>{{ sensor.nombre }}</strong></td>
                     <td>{{ sensor.tipoSensor }}</td>
-                    <td>📍 {{ sensor.comunidad }}</td>
+                    <td>📍 {{ sensor.ubicacion }}</td>
                     <td>
                       <div class="range-inputs">
                         <input type="number" [(ngModel)]="sensor.valorMinimo" class="input-sm text-dark">
@@ -620,7 +628,6 @@
             </table>
           </div>
 
-          <!-- Zona de Reinicio del Sistema -->
           <div class="danger-zone-card">
             <div class="danger-info">
               <h3>⚠️ Procedimiento de Reinicio de Monitoreo</h3>
@@ -709,7 +716,7 @@
             </div>
 
             <div class="form-group">
-              <label>Comunidad / Aldea de Villa Canales</label>
+              <label>Aldea / Comunidad de Villa Canales</label>
               <select [(ngModel)]="nuevoSensor.comunidad" class="form-input text-dark select-dark-options">
                 @for (aldea of aldeasVillaCanales; track aldea) {
                   <option [value]="aldea">📍 {{ aldea }}</option>
@@ -718,11 +725,11 @@
             </div>
 
             <div class="form-group">
-              <label>Ubicación Detallada (Sector)</label>
+              <label>Ubicación Detallada (Sector / Finca)</label>
               <input 
                 type="text" 
                 [(ngModel)]="nuevoSensor.ubicacion" 
-                placeholder="Ej: Sector Agrícola Central, Finca San Jerónimo" 
+                placeholder="Ej: Sector Finca El Manantial, Kilómetro 28" 
                 class="form-input text-dark">
             </div>
 

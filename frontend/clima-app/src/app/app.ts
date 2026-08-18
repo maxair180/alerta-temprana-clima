@@ -40,8 +40,7 @@ export class App implements OnInit, OnDestroy {
   // Estado general de la comunidad
   public estadoComunidad: 'Normal' | 'Precaucion' | 'Alerta' | 'Emergencia' = 'Normal';
 
-  // Modal para agregar sensor con aldeas de Villa Canales
-  public modalAgregarSensor: boolean = false;
+  // 13 Aldeas Oficiales del Municipio de Villa Canales
   public aldeasVillaCanales: string[] = [
     'Boca del Monte',
     'El Tablón',
@@ -56,9 +55,11 @@ export class App implements OnInit, OnDestroy {
     'Los Pocitos',
     'El Obrajuelo',
     'El Jocotillo',
-    'Otra Comunidad Rural'
+    'Otra Comunidad / Sector'
   ];
 
+  // Modal para agregar sensor
+  public modalAgregarSensor: boolean = false;
   public nuevoSensor: {
     nombre: string;
     tipoSensor: 'Temperatura' | 'Humedad' | 'Viento' | 'Lluvia' | 'NivelRio';
@@ -70,8 +71,8 @@ export class App implements OnInit, OnDestroy {
   } = {
     nombre: '',
     tipoSensor: 'Temperatura',
-    comunidad: 'Santa Elena Barillas',
-    ubicacion: '',
+    comunidad: 'Los Pocitos',
+    ubicacion: 'Finca Agrícola El Manantial',
     unidadMedida: '°C',
     valorMinimo: 10,
     valorMaximo: 35
@@ -136,7 +137,6 @@ export class App implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
-  // Login
   public ejecutarLogin() {
     this.loginError = '';
     const exito = this.climaService.login(this.loginForm.correo, this.loginForm.contrasenia);
@@ -229,22 +229,22 @@ export class App implements OnInit, OnDestroy {
     return this.sensores.filter(s => s.comunidad === this.filtroComunidadMapa);
   }
 
-  // Coordenadas relativas en el mapa de Villa Canales según aldea
+  // Coordenadas geográficas calibradas para las 13 Aldeas de Villa Canales
   public obtenerPosicionMapa(sensor: SensorModel): { top: string; left: string } {
     const mapaCoordenadas: { [key: string]: { top: number; left: number } } = {
-      'Boca del Monte': { top: 12, left: 55 },
-      'El Tablón': { top: 28, left: 42 },
-      'Chichimecas': { top: 22, left: 62 },
-      'Colmenas': { top: 32, left: 70 },
-      'El Durazno': { top: 38, left: 64 },
-      'El Zapote': { top: 34, left: 38 },
-      'El Porvenir': { top: 18, left: 74 },
-      'Santa Rosita': { top: 48, left: 50 },
-      'Santa Elena Barillas': { top: 56, left: 60 },
-      'Los Dolores': { top: 68, left: 45 },
-      'Los Pocitos': { top: 76, left: 35 },
-      'El Obrajuelo': { top: 86, left: 48 },
-      'El Jocotillo': { top: 72, left: 78 }
+      'Boca del Monte': { top: 10, left: 52 },
+      'El Porvenir': { top: 16, left: 72 },
+      'Chichimecas': { top: 22, left: 60 },
+      'El Tablón': { top: 27, left: 32 },
+      'Colmenas': { top: 31, left: 76 },
+      'El Zapote': { top: 35, left: 22 },
+      'El Durazno': { top: 39, left: 68 },
+      'Santa Rosita': { top: 47, left: 50 },
+      'Santa Elena Barillas': { top: 55, left: 64 },
+      'Los Dolores': { top: 67, left: 38 },
+      'Los Pocitos': { top: 75, left: 26 },
+      'El Jocotillo': { top: 73, left: 78 },
+      'El Obrajuelo': { top: 87, left: 46 }
     };
 
     if (mapaCoordenadas[sensor.comunidad]) {
@@ -252,7 +252,6 @@ export class App implements OnInit, OnDestroy {
       return { top: `${coord.top}%`, left: `${coord.left}%` };
     }
 
-    // Posición dinámica si es una comunidad nueva
     const offsetTop = 20 + ((sensor.id * 17) % 65);
     const offsetLeft = 25 + ((sensor.id * 23) % 55);
     return { top: `${offsetTop}%`, left: `${offsetLeft}%` };
@@ -289,12 +288,16 @@ export class App implements OnInit, OnDestroy {
 
     this.actualizarUnidadSegunTipo();
 
+    const ubicacionFinal = this.nuevoSensor.ubicacion 
+      ? `${this.nuevoSensor.comunidad} (${this.nuevoSensor.ubicacion})`
+      : `Aldea ${this.nuevoSensor.comunidad}, Villa Canales`;
+
     const nuevo: SensorModel = {
       id: Date.now(),
       nombre: this.nuevoSensor.nombre,
       codigoIdentificador: `SENS-${this.nuevoSensor.tipoSensor.toUpperCase().substring(0, 4)}-0${this.sensores.length + 1}`,
       comunidad: this.nuevoSensor.comunidad,
-      ubicacion: this.nuevoSensor.ubicacion || `Aldea ${this.nuevoSensor.comunidad}, Villa Canales`,
+      ubicacion: ubicacionFinal,
       latitud: 14.4500 + (Math.random() - 0.5) * 0.05,
       longitud: -90.5100 + (Math.random() - 0.5) * 0.05,
       tipoSensor: this.nuevoSensor.tipoSensor,
@@ -304,7 +307,7 @@ export class App implements OnInit, OnDestroy {
       valorActual: Number(((this.nuevoSensor.valorMinimo + this.nuevoSensor.valorMaximo) / 2).toFixed(1)),
       estado: true,
       nivelRiesgoActual: 'Verde',
-      mensajeActual: `Sensor instalado en ${this.nuevoSensor.comunidad} y operando en rango normal.`,
+      mensajeActual: `Sensor instalado en ${ubicacionFinal} y operando en rango normal.`,
       fechaInstalacion: new Date().toLocaleDateString('es-GT'),
       historialLecturas: [this.nuevoSensor.valorMinimo, (this.nuevoSensor.valorMinimo + this.nuevoSensor.valorMaximo) / 2]
     };
@@ -314,14 +317,14 @@ export class App implements OnInit, OnDestroy {
     this.climaService.registrarEnBitacora(
       'Nuevo Sensor Agregado',
       'Sensores',
-      `Sensor ${nuevo.nombre} (${nuevo.codigoIdentificador}) registrado en la comunidad de ${nuevo.comunidad}.`
+      `Sensor ${nuevo.nombre} (${nuevo.codigoIdentificador}) registrado en ${ubicacionFinal}.`
     );
 
     this.modalAgregarSensor = false;
     this.nuevoSensor = {
       nombre: '',
       tipoSensor: 'Temperatura',
-      comunidad: 'Santa Elena Barillas',
+      comunidad: 'Los Pocitos',
       ubicacion: '',
       unidadMedida: '°C',
       valorMinimo: 10,

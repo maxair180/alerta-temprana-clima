@@ -158,7 +158,7 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* ======================== INPUTS & SELECTS DE ALTO CONTRASTE (COLOR NEGRO) ======================== */
+/* ======================== INPUTS & SELECTS DE ALTO CONTRASTE ======================== */
 .text-dark {
   color: #111827 !important;
   background-color: #ffffff !important;
@@ -498,7 +498,7 @@
 .sensor-title-group { display: flex; align-items: center; gap: 8px; }
 .sensor-type-icon { font-size: 1.3rem; }
 .sensor-title-group h3 { font-size: 0.88rem; font-weight: 600; }
-.sensor-code { font-size: 0.68rem; color: #60a5fa; display: block; }
+.sensor-code { font-size: 0.72rem; color: #60a5fa; display: block; font-weight: 500; }
 
 .card-body { display: flex; justify-content: space-between; align-items: flex-end; margin: 8px 0; }
 .value-display { display: flex; align-items: baseline; gap: 3px; }
@@ -558,7 +558,7 @@
 
 /* ======================== MAPA DE VILLA CANALES ======================== */
 .villa-canales-map-container {
-  height: 280px;
+  height: 350px;
   background: radial-gradient(circle at 50% 50%, #111e33, #090f19);
   border-radius: 12px;
   position: relative;
@@ -588,9 +588,9 @@
 
 .lake-zone {
   position: absolute;
-  bottom: 8%;
-  left: 8%;
-  font-size: 0.65rem;
+  bottom: 6%;
+  left: 6%;
+  font-size: 0.62rem;
   font-weight: 700;
   color: rgba(96, 165, 250, 0.4);
   text-transform: uppercase;
@@ -599,20 +599,26 @@
 
 .aldea-label {
   position: absolute;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.28);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   pointer-events: none;
 }
 
 .label-boca { top: 8%; left: 45%; }
-.label-tablon { top: 25%; left: 30%; }
-.label-porvenir { top: 15%; right: 18%; }
-.label-barillas { top: 52%; right: 28%; }
-.label-dolores { top: 65%; left: 35%; }
-.label-jocotillo { bottom: 15%; right: 15%; }
+.label-porvenir { top: 15%; right: 15%; }
+.label-chichimecas { top: 22%; left: 54%; }
+.label-tablon { top: 26%; left: 24%; }
+.label-colmenas { top: 30%; right: 12%; }
+.label-zapote { top: 35%; left: 16%; }
+.label-durazno { top: 40%; right: 22%; }
+.label-rosita { top: 47%; left: 42%; }
+.label-barillas { top: 54%; right: 26%; }
+.label-dolores { top: 66%; left: 32%; }
+.label-pocitos { top: 74%; left: 20%; color: rgba(96, 165, 250, 0.55); font-weight: 700; }
+.label-jocotillo { bottom: 18%; right: 12%; }
 .label-obrajuelo { bottom: 8%; left: 42%; }
 
 .map-pin {
@@ -620,18 +626,48 @@
   transform: translate(-50%, -50%);
   cursor: pointer;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ETIQUETA PERMANENTE VISIBLE EN EL MAPA */
+.pin-name-badge {
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.pin-muni-name {
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.pin-metric-val {
+  color: var(--text-primary);
+  font-size: 0.65rem;
+  font-weight: 600;
 }
 
 .pin-icon {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   background: #111827;
   border: 2px solid #10b981;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   transition: transform 0.2s ease;
 }
@@ -644,8 +680,9 @@
 
 .pin-pulse {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  bottom: 0;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--color-verde);
   opacity: 0.4;
@@ -656,18 +693,18 @@
 
 .pin-tooltip {
   position: absolute;
-  bottom: 36px;
+  bottom: 48px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(17, 24, 39, 0.95);
+  background: rgba(17, 24, 39, 0.98);
   border: 1px solid var(--border-subtle);
   border-radius: 6px;
   padding: 6px 10px;
   white-space: nowrap;
   font-size: 0.72rem;
   display: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 30;
 }
 
 .map-pin:hover .pin-tooltip { display: flex; flex-direction: column; }
