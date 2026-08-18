@@ -15,7 +15,7 @@
 
 | Integrante | Rol en el Proyecto | Responsabilidades Principales |
 | :--- | :--- | :--- |
-| **Christian González** (`maxair180`) | **Frontend Engineer** | Diseño UI/UX en Angular 20+, Cliente SignalR, Mapa Georreferenciado y Dashboard en tiempo real. |
+| **Christian García** (`maxair180`) | **Frontend Engineer** | Diseño UI/UX en Angular 20+, Cliente SignalR, Mapa Georreferenciado y Dashboard en tiempo real. |
 | **Melannie Lorenzana** | **Backend Engineer** | API REST en C# .NET, Entity Framework Core, Hub de SignalR, Simulador en segundo plano y Motor de Alertas. |
 | **Carlos Fernando Cachin** (`CACHIN1563`) | **Database & DevOps** | Diseño Relacional en SQL Server 2022, Procedimientos Almacenados, Paginación, Inmunidad SQL Injection y Docker Compose. |
 
@@ -77,8 +77,8 @@ El sistema monitorea **5 variables ambientales clave** clasificadas en **4 nivel
 * 🌊 **Inundación** (Río $\ge 5.0$ m o Lluvia $\ge 80$ mm)
 * ☀️ **Sequía** (Humedad $\le 15\%$ o Caudal $\le 0.8$ m)
 * 🌪️ **Tormenta** (Viento $\ge 70$ km/h o Lluvia $\ge 50$ mm)
-* ❄️ **Helada** (Temperatura $\le 0^\circ$C)
-* 🔥 **Incendio Forestal** (Temperatura $\ge 40^\circ$C y Humedad $\le 20\%$)
+* ❄️ **Helada** (Temperatura 0°C)
+* 🔥 **Incendio Forestal** (Temperatura 40°C y Humedad $\le 20\%$)
 
 ---
 
