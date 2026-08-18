@@ -121,41 +121,11 @@
   transform: translateY(-1px);
 }
 
-.login-quick-access {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-subtle);
+.security-badge-note {
+  margin-top: 20px;
   text-align: center;
-}
-
-.login-quick-access span {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
-  display: block;
-  margin-bottom: 10px;
-}
-
-.quick-btns {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.btn-quick {
-  background: var(--bg-glass);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.btn-quick:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* ======================== INPUTS & SELECTS DE ALTO CONTRASTE ======================== */
@@ -631,7 +601,6 @@
   align-items: center;
 }
 
-/* ETIQUETA PERMANENTE VISIBLE EN EL MAPA */
 .pin-name-badge {
   background: rgba(17, 24, 39, 0.95);
   border: 1px solid var(--border-subtle);
@@ -647,16 +616,8 @@
   pointer-events: none;
 }
 
-.pin-muni-name {
-  color: #60a5fa;
-  font-weight: 700;
-}
-
-.pin-metric-val {
-  color: var(--text-primary);
-  font-size: 0.65rem;
-  font-weight: 600;
-}
+.pin-muni-name { color: #60a5fa; font-weight: 700; }
+.pin-metric-val { color: var(--text-primary); font-size: 0.65rem; font-weight: 600; }
 
 .pin-icon {
   width: 28px;
@@ -673,7 +634,6 @@
 }
 
 .map-pin:hover .pin-icon { transform: scale(1.25); }
-
 .pin-risk-rojo .pin-icon { border-color: var(--color-rojo); }
 .pin-risk-naranja .pin-icon { border-color: var(--color-naranja); }
 .pin-risk-amarillo .pin-icon { border-color: var(--color-amarillo); }
@@ -711,7 +671,7 @@
 .tooltip-loc { color: #60a5fa; font-size: 0.68rem; }
 .tooltip-val { color: var(--text-primary); font-weight: 700; margin-top: 2px; }
 
-/* ======================== TABLAS Y VISTAS ======================== */
+/* ======================== TABLAS Y PAGINACIÓN ======================== */
 .view-panel {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
@@ -818,6 +778,68 @@
 
 .empty-state { text-align: center; padding: 48px; color: var(--text-muted); }
 
+/* ======================== PAGINACIÓN MINIMALISTA ======================== */
+.pagination-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pagination-info {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.pagination-info strong {
+  color: var(--text-primary);
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-page {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-page:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-page:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.page-number-pill {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* DANGER ZONE */
 .danger-zone-card {
   margin-top: 32px;
@@ -888,7 +910,7 @@
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
-/* ======================== RESPONSIVE DESIGN (PC & MÓVIL) ======================== */
+/* ======================== RESPONSIVE ======================== */
 @media (max-width: 992px) {
   .dashboard-bottom-grid {
     grid-template-columns: 1fr;
@@ -930,5 +952,11 @@
   .danger-zone-card {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .pagination-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
   }
 }

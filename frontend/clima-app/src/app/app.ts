@@ -14,11 +14,11 @@ import { Subscription } from 'rxjs';
 export class App implements OnInit, OnDestroy {
   public pestanaActiva: 'dashboard' | 'alertas' | 'historial' | 'admin' | 'bitacora' = 'dashboard';
 
-  // Autenticación
+  // Autenticación - CAMPOS LIMPIOS SIN DATOS POR DEFECTO
   public usuarioActual: UsuarioAuth | null = null;
   public loginForm = {
-    correo: 'ccachinm@miumg.edu.gt',
-    contrasenia: 'admin123'
+    correo: '',
+    contrasenia: ''
   };
   public loginError: string = '';
 
@@ -36,6 +36,18 @@ export class App implements OnInit, OnDestroy {
   public filtroFenomeno: string = 'TODOS';
   public filtroComunidadMapa: string = 'TODAS';
   public sensorSeleccionadoGraficoId: number = 1;
+
+  // ======================== PAGINACIÓN (SEGURIDAD Y RENDIMIENTO) ========================
+  public itemsPorPagina: number = 5;
+  
+  // Paginación Alertas
+  public paginaActualAlertas: number = 1;
+  
+  // Paginación Historial
+  public paginaActualHistorial: number = 1;
+
+  // Paginación Bitácora
+  public paginaActualBitacora: number = 1;
 
   // Estado general de la comunidad
   public estadoComunidad: 'Normal' | 'Precaucion' | 'Alerta' | 'Emergencia' = 'Normal';
@@ -72,7 +84,7 @@ export class App implements OnInit, OnDestroy {
     nombre: '',
     tipoSensor: 'Temperatura',
     comunidad: 'Los Pocitos',
-    ubicacion: 'Finca Agrícola El Manantial',
+    ubicacion: '',
     unidadMedida: '°C',
     valorMinimo: 10,
     valorMaximo: 35
@@ -137,27 +149,34 @@ export class App implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
+  // =========================================================================
+  // AUTENTICACIÓN SEGURA (SANITIZACIÓN CONTRA INYECCIONES)
+  // =========================================================================
   public ejecutarLogin() {
     this.loginError = '';
-    const exito = this.climaService.login(this.loginForm.correo, this.loginForm.contrasenia);
-    if (!exito) {
-      this.loginError = 'Credenciales inválidas. Usa ccachinm@miumg.edu.gt (clave: admin123) o selecciona un acceso rápido.';
-    }
-  }
+    
+    // Sanitización básica de inputs
+    const correoLimpio = (this.loginForm.correo || '').trim().toLowerCase();
+    const claveLimpia = (this.loginForm.contrasenia || '').trim();
 
-  public loginRapido(rol: 'admin' | 'operador') {
-    if (rol === 'admin') {
-      this.loginForm.correo = 'ccachinm@miumg.edu.gt';
-      this.loginForm.contrasenia = 'admin123';
-    } else {
-      this.loginForm.correo = 'operador@miumg.edu.gt';
-      this.loginForm.contrasenia = 'operador123';
+    if (!correoLimpio || !claveLimpia) {
+      this.loginError = 'Por favor ingresa tu correo y contraseña.';
+      return;
     }
-    this.ejecutarLogin();
+
+    const exito = this.climaService.login(correoLimpio, claveLimpia);
+    if (!exito) {
+      this.loginError = 'Credenciales inválidas. Verifica tu correo y contraseña.';
+    } else {
+      // Limpiar formulario al ingresar
+      this.loginForm = { correo: '', contrasenia: '' };
+    }
   }
 
   public cerrarSesion() {
     this.climaService.logout();
+    this.loginForm = { correo: '', contrasenia: '' };
+    this.loginError = '';
   }
 
   private calcularEstadoComunidad() {
@@ -200,7 +219,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   public reiniciarSistema() {
-    if (confirm('¿Estás seguro de reiniciar el sistema de monitoreo? Esto restablecerá todos los sensores al estado normal y limpiará las alertas activas según el procedimiento sp_ReiniciarMonitoreo.')) {
+    if (confirm('¿Estás seguro de reiniciar el sistema de monitoreo? Esto restablecerá todos los sensores al estado normal y limpiará las alertas activas mediante procedimiento parametrizado.')) {
       this.climaService.reiniciarSistemaMonitoreo();
     }
   }
@@ -209,14 +228,66 @@ export class App implements OnInit, OnDestroy {
     this.climaService.simularEventoExtremo(tipo);
   }
 
+  // =========================================================================
+  // GETTERS CON FILTROS Y PAGINACIÓN OPTIMIZADA
+  // =========================================================================
   public get alertasFiltradas(): AlertaModel[] {
     if (this.filtroNivelAlerta === 'TODOS') return this.alertas;
     return this.alertas.filter(a => a.nivelRiesgo === this.filtroNivelAlerta);
   }
 
+  public get alertasPaginadas(): AlertaModel[] {
+    const inicio = (this.paginaActualAlertas - 1) * this.itemsPorPagina;
+    return this.alertasFiltradas.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  public get totalPaginasAlertas(): number {
+    return Math.ceil(this.alertasFiltradas.length / this.itemsPorPagina) || 1;
+  }
+
   public get historialFiltrado(): HistorialEventoModel[] {
     if (this.filtroFenomeno === 'TODOS') return this.historial;
     return this.historial.filter(h => h.tipoFenomeno === this.filtroFenomeno);
+  }
+
+  public get historialPaginado(): HistorialEventoModel[] {
+    const inicio = (this.paginaActualHistorial - 1) * this.itemsPorPagina;
+    return this.historialFiltrado.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  public get totalPaginasHistorial(): number {
+    return Math.ceil(this.historialFiltrado.length / this.itemsPorPagina) || 1;
+  }
+
+  public get bitacoraPaginada(): BitacoraModel[] {
+    const inicio = (this.paginaActualBitacora - 1) * this.itemsPorPagina;
+    return this.bitacora.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  public get totalPaginasBitacora(): number {
+    return Math.ceil(this.bitacora.length / this.itemsPorPagina) || 1;
+  }
+
+  // Métodos de control de paginación
+  public cambiarPaginaAlertas(delta: number) {
+    const nueva = this.paginaActualAlertas + delta;
+    if (nueva >= 1 && nueva <= this.totalPaginasAlertas) {
+      this.paginaActualAlertas = nueva;
+    }
+  }
+
+  public cambiarPaginaHistorial(delta: number) {
+    const nueva = this.paginaActualHistorial + delta;
+    if (nueva >= 1 && nueva <= this.totalPaginasHistorial) {
+      this.paginaActualHistorial = nueva;
+    }
+  }
+
+  public cambiarPaginaBitacora(delta: number) {
+    const nueva = this.paginaActualBitacora + delta;
+    if (nueva >= 1 && nueva <= this.totalPaginasBitacora) {
+      this.paginaActualBitacora = nueva;
+    }
   }
 
   public get comunidadesUnicas(): string[] {
@@ -229,7 +300,6 @@ export class App implements OnInit, OnDestroy {
     return this.sensores.filter(s => s.comunidad === this.filtroComunidadMapa);
   }
 
-  // Coordenadas geográficas calibradas para las 13 Aldeas de Villa Canales
   public obtenerPosicionMapa(sensor: SensorModel): { top: string; left: string } {
     const mapaCoordenadas: { [key: string]: { top: number; left: number } } = {
       'Boca del Monte': { top: 10, left: 52 },

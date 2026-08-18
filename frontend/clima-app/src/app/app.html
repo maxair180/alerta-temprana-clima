@@ -25,12 +25,13 @@
         }
 
         <div class="form-group">
-          <label>Correo Electrónico Institucional</label>
+          <label>Correo Electrónico</label>
           <input 
             type="email" 
             [(ngModel)]="loginForm.correo" 
             name="correo" 
-            placeholder="ccachinm@miumg.edu.gt" 
+            placeholder="Ingresa tu correo institucional" 
+            autocomplete="off"
             required
             class="form-input text-dark">
         </div>
@@ -41,7 +42,8 @@
             type="password" 
             [(ngModel)]="loginForm.contrasenia" 
             name="contrasenia" 
-            placeholder="••••••••" 
+            placeholder="Ingresa tu contraseña" 
+            autocomplete="off"
             required
             class="form-input text-dark">
         </div>
@@ -50,16 +52,8 @@
           Ingresar al Sistema
         </button>
 
-        <div class="login-quick-access">
-          <span>Accesos rápidos de evaluación:</span>
-          <div class="quick-btns">
-            <button type="button" class="btn-quick" (click)="loginRapido('admin')">
-              👑 Carlos Cachin (Admin)
-            </button>
-            <button type="button" class="btn-quick" (click)="loginRapido('operador')">
-              👷 Operador de Monitoreo
-            </button>
-          </div>
+        <div class="security-badge-note">
+          <span>🔒 Conexión Segura & Consultas Parametrizadas</span>
         </div>
       </form>
     </div>
@@ -242,7 +236,6 @@
                     </div>
                     <div>
                       <h3>{{ sensor.nombre }}</h3>
-                      <!-- UBICACIÓN COMPLETA Y CÓDIGO VISIBLE -->
                       <span class="sensor-code">📍 {{ sensor.ubicacion }} • {{ sensor.codigoIdentificador }}</span>
                     </div>
                   </div>
@@ -421,7 +414,7 @@
       }
 
       <!-- ===================================================================
-           PESTAÑA 2: CENTRO DE ALERTAS
+           PESTAÑA 2: CENTRO DE ALERTAS (CON PAGINACIÓN)
            =================================================================== -->
       @if (pestanaActiva === 'alertas') {
         <div class="view-panel">
@@ -432,11 +425,11 @@
             </div>
 
             <div class="filter-pills">
-              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'TODOS'" (click)="filtroNivelAlerta = 'TODOS'">Todos</button>
-              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Rojo'" (click)="filtroNivelAlerta = 'Rojo'">🔴 Rojo</button>
-              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Naranja'" (click)="filtroNivelAlerta = 'Naranja'">🟠 Naranja</button>
-              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Amarillo'" (click)="filtroNivelAlerta = 'Amarillo'">🟡 Amarillo</button>
-              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Verde'" (click)="filtroNivelAlerta = 'Verde'">🟢 Verde</button>
+              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'TODOS'" (click)="filtroNivelAlerta = 'TODOS'; paginaActualAlertas = 1">Todos</button>
+              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Rojo'" (click)="filtroNivelAlerta = 'Rojo'; paginaActualAlertas = 1">🔴 Rojo</button>
+              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Naranja'" (click)="filtroNivelAlerta = 'Naranja'; paginaActualAlertas = 1">🟠 Naranja</button>
+              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Amarillo'" (click)="filtroNivelAlerta = 'Amarillo'; paginaActualAlertas = 1">🟡 Amarillo</button>
+              <button class="pill-btn" [class.active]="filtroNivelAlerta === 'Verde'" (click)="filtroNivelAlerta = 'Verde'; paginaActualAlertas = 1">🟢 Verde</button>
             </div>
           </div>
 
@@ -460,7 +453,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (alerta of alertasFiltradas; track alerta.id) {
+                  @for (alerta of alertasPaginadas; track alerta.id) {
                     <tr>
                       <td>
                         <span class="badge" [ngClass]="'badge-' + alerta.nivelRiesgo.toLowerCase()">
@@ -491,12 +484,34 @@
                 </tbody>
               </table>
             </div>
+
+            <!-- CONTROLES DE PAGINACIÓN ALERTAS -->
+            <div class="pagination-footer">
+              <span class="pagination-info">
+                Página <strong>{{ paginaActualAlertas }}</strong> de <strong>{{ totalPaginasAlertas }}</strong> (Total: {{ alertasFiltradas.length }} alertas)
+              </span>
+              <div class="pagination-buttons">
+                <button 
+                  class="btn-page" 
+                  [disabled]="paginaActualAlertas === 1" 
+                  (click)="cambiarPaginaAlertas(-1)">
+                  ◀ Anterior
+                </button>
+                <span class="page-number-pill">{{ paginaActualAlertas }}</span>
+                <button 
+                  class="btn-page" 
+                  [disabled]="paginaActualAlertas === totalPaginasAlertas" 
+                  (click)="cambiarPaginaAlertas(1)">
+                  Siguiente ▶
+                </button>
+              </div>
+            </div>
           }
         </div>
       }
 
       <!-- ===================================================================
-           PESTAÑA 3: HISTORIAL DE EVENTOS
+           PESTAÑA 3: HISTORIAL DE EVENTOS (CON PAGINACIÓN)
            =================================================================== -->
       @if (pestanaActiva === 'historial') {
         <div class="view-panel">
@@ -507,12 +522,12 @@
             </div>
 
             <div class="filter-pills">
-              <button class="pill-btn" [class.active]="filtroFenomeno === 'TODOS'" (click)="filtroFenomeno = 'TODOS'">Todos</button>
-              <button class="pill-btn" [class.active]="filtroFenomeno === 'Inundacion'" (click)="filtroFenomeno = 'Inundacion'">🌊 Inundación</button>
-              <button class="pill-btn" [class.active]="filtroFenomeno === 'Sequia'" (click)="filtroFenomeno = 'Sequia'">☀️ Sequía</button>
-              <button class="pill-btn" [class.active]="filtroFenomeno === 'Tormenta'" (click)="filtroFenomeno = 'Tormenta'">🌪️ Tormenta</button>
-              <button class="pill-btn" [class.active]="filtroFenomeno === 'Helada'" (click)="filtroFenomeno = 'Helada'">❄️ Helada</button>
-              <button class="pill-btn" [class.active]="filtroFenomeno === 'Incendio forestal'" (click)="filtroFenomeno = 'Incendio forestal'">🔥 Incendio</button>
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'TODOS'" (click)="filtroFenomeno = 'TODOS'; paginaActualHistorial = 1">Todos</button>
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'Inundacion'" (click)="filtroFenomeno = 'Inundacion'; paginaActualHistorial = 1">🌊 Inundación</button>
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'Sequia'" (click)="filtroFenomeno = 'Sequia'; paginaActualHistorial = 1">☀️ Sequía</button>
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'Tormenta'" (click)="filtroFenomeno = 'Tormenta'; paginaActualHistorial = 1">🌪️ Tormenta</button>
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'Helada'" (click)="filtroFenomeno = 'Helada'; paginaActualHistorial = 1">❄️ Helada</button>
+              <button class="pill-btn" [class.active]="filtroFenomeno === 'Incendio forestal'" (click)="filtroFenomeno = 'Incendio forestal'; paginaActualHistorial = 1">🔥 Incendio</button>
             </div>
           </div>
 
@@ -534,7 +549,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (item of historialFiltrado; track item.id) {
+                  @for (item of historialPaginado; track item.id) {
                     <tr>
                       <td>
                         <div class="phenomenon-tag">
@@ -558,6 +573,28 @@
                   }
                 </tbody>
               </table>
+            </div>
+
+            <!-- CONTROLES DE PAGINACIÓN HISTORIAL -->
+            <div class="pagination-footer">
+              <span class="pagination-info">
+                Página <strong>{{ paginaActualHistorial }}</strong> de <strong>{{ totalPaginasHistorial }}</strong> (Total: {{ historialFiltrado.length }} eventos)
+              </span>
+              <div class="pagination-buttons">
+                <button 
+                  class="btn-page" 
+                  [disabled]="paginaActualHistorial === 1" 
+                  (click)="cambiarPaginaHistorial(-1)">
+                  ◀ Anterior
+                </button>
+                <span class="page-number-pill">{{ paginaActualHistorial }}</span>
+                <button 
+                  class="btn-page" 
+                  [disabled]="paginaActualHistorial === totalPaginasHistorial" 
+                  (click)="cambiarPaginaHistorial(1)">
+                  Siguiente ▶
+                </button>
+              </div>
             </div>
           }
         </div>
@@ -630,8 +667,8 @@
 
           <div class="danger-zone-card">
             <div class="danger-info">
-              <h3>⚠️ Procedimiento de Reinicio de Monitoreo</h3>
-              <p>Ejecuta el procedimiento <code>sp_ReiniciarMonitoreo</code> para reiniciar los sensores a estado activo y limpiar alertas previas.</p>
+              <h3>⚠️ Procedimiento Parametrizado de Reinicio</h3>
+              <p>Ejecuta el procedimiento seguro <code>sp_ReiniciarMonitoreo</code> para reiniciar los sensores a estado activo y limpiar alertas previas.</p>
             </div>
             <button class="btn-danger-large" (click)="reiniciarSistema()">
               🔄 Reiniciar Sistema de Monitoreo
@@ -641,7 +678,7 @@
       }
 
       <!-- ===================================================================
-           PESTAÑA 5: BITÁCORA DE AUDITORÍA
+           PESTAÑA 5: BITÁCORA DE AUDITORÍA (CON PAGINACIÓN)
            =================================================================== -->
       @if (pestanaActiva === 'bitacora') {
         <div class="view-panel">
@@ -666,7 +703,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (log of bitacora; track log.id) {
+                @for (log of bitacoraPaginada; track log.id) {
                   <tr>
                     <td>#{{ log.id }}</td>
                     <td><strong>{{ log.usuarioNombre }}</strong></td>
@@ -679,6 +716,28 @@
                 }
               </tbody>
             </table>
+          </div>
+
+          <!-- CONTROLES DE PAGINACIÓN BITÁCORA -->
+          <div class="pagination-footer">
+            <span class="pagination-info">
+              Página <strong>{{ paginaActualBitacora }}</strong> de <strong>{{ totalPaginasBitacora }}</strong> (Total: {{ bitacora.length }} registros)
+            </span>
+            <div class="pagination-buttons">
+              <button 
+                class="btn-page" 
+                [disabled]="paginaActualBitacora === 1" 
+                (click)="cambiarPaginaBitacora(-1)">
+                ◀ Anterior
+              </button>
+              <span class="page-number-pill">{{ paginaActualBitacora }}</span>
+              <button 
+                class="btn-page" 
+                [disabled]="paginaActualBitacora === totalPaginasBitacora" 
+                (click)="cambiarPaginaBitacora(1)">
+                Siguiente ▶
+              </button>
+            </div>
           </div>
         </div>
       }
@@ -729,7 +788,7 @@
               <input 
                 type="text" 
                 [(ngModel)]="nuevoSensor.ubicacion" 
-                placeholder="Ej: Sector Finca El Manantial, Kilómetro 28" 
+                placeholder="Ej: Finca El Manantial, Kilómetro 28" 
                 class="form-input text-dark">
             </div>
 
