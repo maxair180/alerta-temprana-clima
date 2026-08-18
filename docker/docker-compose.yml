@@ -20,7 +20,22 @@ services:
       - clima_network
 
   # ===========================================================================
-  # 2. BACKEND: C# .NET Web API + SignalR + BackgroundService
+  # 2. INICIALIZADOR AUTOMÁTICO DE BASE DE DATOS (SEED & SCHEMA)
+  # ===========================================================================
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: clima_db_init
+    depends_on:
+      - database
+    volumes:
+      - ../database/schema.sql:/usr/src/app/schema.sql
+      - ./db-init.sh:/usr/src/app/db-init.sh
+    entrypoint: ["/bin/bash", "/usr/src/app/db-init.sh"]
+    networks:
+      - clima_network
+
+  # ===========================================================================
+  # 3. BACKEND: C# .NET Web API + SignalR + BackgroundService
   # ===========================================================================
   backend:
     build:
@@ -36,11 +51,12 @@ services:
       - "5000:8080"
     depends_on:
       - database
+      - db-init
     networks:
       - clima_network
 
   # ===========================================================================
-  # 3. FRONTEND: Angular SPA Dashboard en Nginx
+  # 4. FRONTEND: Angular SPA Dashboard en Nginx
   # ===========================================================================
   frontend:
     build:

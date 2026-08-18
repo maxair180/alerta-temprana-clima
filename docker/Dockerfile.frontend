@@ -1,14 +1,14 @@
 # ===========================================================================
 # DOCKERFILE FRONTEND: ANGULAR 20+ SPA EN NGINX (LINUX CONTAINER)
 # ===========================================================================
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 
 COPY frontend/clima-app/package*.json ./
 RUN npm install
 
 COPY frontend/clima-app/ ./
-RUN npm run build -- --configuration production
+RUN node build.js
 
 # Servidor web Nginx ligero para producción
 FROM nginx:alpine AS runtime
