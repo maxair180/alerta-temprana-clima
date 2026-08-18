@@ -55,6 +55,7 @@ public class AlertaService
             SensorId = sensor.Id,
             NivelRiesgo = nivelRiesgo,
             Mensaje = mensaje,
+            ValorRegistrado = lectura.Valor,
             FechaHora = DateTime.UtcNow
         };
         _context.Alertas.Add(nuevaAlerta);
@@ -67,6 +68,8 @@ public class AlertaService
             {
                 AlertaId = nuevaAlerta.Id,
                 TipoFenomeno = fenomeno,
+                Descripcion = mensaje,
+                NivelGravedad = nivelRiesgo,
                 FechaHora = DateTime.UtcNow
             };
             _context.HistorialEventos.Add(historial);

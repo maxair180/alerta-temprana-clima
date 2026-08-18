@@ -44,14 +44,14 @@ services:
     container_name: clima_backend
     restart: always
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Server=database,1433;Database=ClimaDB;User Id=sa;Password=ClimaDB_Secure2026!;TrustServerCertificate=True;
     ports:
       - "5000:8080"
     depends_on:
-      - database
-      - db-init
+      db-init:
+        condition: service_completed_successfully
     networks:
       - clima_network
 
