@@ -135,6 +135,19 @@ export class ClimaService {
       return true;
     }
 
+    if (correo === 'cgarcia@miumg.edu.gt' && contrasenia === 'YAYA@2026') {
+      const usuario: UsuarioAuth = {
+        id: 3,
+        nombre: 'Christian Garcia',
+        correo: 'cgarcia@miumg.edu.gt',
+        rol: 'Operador'
+      };
+      this.usuarioActual$.next(usuario);
+      localStorage.setItem('clima_usuario_sesion', JSON.stringify(usuario));
+      this.registrarEnBitacora('Inicio de Sesión', 'Seguridad', `Ingreso exitoso como Operador (${correo}).`);
+      return true;
+    }
+
     if (correo === 'operador@miumg.edu.gt' && contrasenia === 'operador123') {
       const usuario: UsuarioAuth = {
         id: 2,
