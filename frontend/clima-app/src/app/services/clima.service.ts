@@ -71,8 +71,8 @@ export interface UsuarioAuth {
   providedIn: 'root'
 })
 export class ClimaService {
-  private apiUrl = 'http://localhost:5000/api';
-  private hubUrl = 'http://localhost:5000/climaHub';
+  private apiUrl = 'http://198.199.65.77:5000/api';
+  private hubUrl = 'http://198.199.65.77:5000/climaHub';
   private hubConnection?: signalR.HubConnection;
 
   // Estado Reactivo
