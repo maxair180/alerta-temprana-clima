@@ -11,6 +11,12 @@
 
 ---
 
+## 🚀 Proyecto en Vivo (Producción)
+El sistema completo ya se encuentra desplegado y funcionando en la nube. Puede ser evaluado directamente sin necesidad de instalación local ingresando al siguiente enlace:
+👉 **[http://198.199.65.77](http://198.199.65.77)**
+
+---
+
 ## 👥 Integrantes del Equipo y Roles
 
 | Integrante | Rol en el Proyecto | Responsabilidades Principales |
@@ -18,6 +24,13 @@
 | **Christian García** (`maxair180`) | **Frontend Engineer** | Diseño UI/UX en Angular 20+, Cliente SignalR, Mapa Georreferenciado y Dashboard en tiempo real. |
 | **Melannie Lorenzana** (`Melannie24`)| **Backend Engineer** | API REST en C# .NET, Entity Framework Core, Hub de SignalR, Simulador en segundo plano y Motor de Alertas. |
 | **Carlos Fernando Cachin** (`CACHIN1563`) | **Database & DevOps** | Diseño Relacional en SQL Server 2022, Procedimientos Almacenados, Paginación, Inmunidad SQL Injection y Docker Compose. |
+
+---
+
+## 📚 Documentación y Manuales
+Toda la documentación oficial del sistema se encuentra adjunta en este repositorio dentro de la carpeta `docs/`.
+* 📘 [Manual Técnico (PDF)](./docs/Manual_Tecnico.pdf)
+* 📗 [Manual de Usuario (PDF)](./docs/Manual_de_Usuario.pdf)
 
 ---
 
@@ -120,7 +133,9 @@ El esquema relacional `database/schema.sql` implementa **6 tablas normalizadas**
 
 ---
 
-## 🚀 Guía de Instalación y Ejecución
+## 🚀 Guía de Instalación y Ejecución Local
+
+Si desea levantar el proyecto en su máquina local en lugar de evaluarlo en la URL de Producción, siga estos pasos:
 
 ### Opción A: Despliegue con Docker Compose 
 
@@ -149,6 +164,7 @@ Requisitos: **Docker Desktop** instalado y en ejecución.
 #### 1. Base de Datos:
 Ejecutar el script `database/schema.sql` en SQL Server Management Studio (SSMS) o por línea de comandos:
 ```powershell
+# Nota: Si su instancia local no se llama SQLEXPRESS02, reemplácelo por el nombre de su instancia (Ej. localhost o SQLEXPRESS).
 sqlcmd -S .\SQLEXPRESS02 -E -f 65001 -i database/schema.sql
 ```
 
@@ -163,7 +179,7 @@ dotnet run
 ```powershell
 cd frontend/clima-app
 npm install
-node serve.js
+ng serve
 ```
 *Aplicación disponible en `http://localhost:4200`*
 
@@ -183,3 +199,4 @@ node serve.js
 ---
 
 *Desarrollado para el curso de **Desarrollo Web (2026)** — Universidad Mariano Gálvez de Guatemala.*
+**Grupo 04**
