@@ -23,18 +23,19 @@ public class BitacoraController : ControllerBase
             .Include(b => b.Usuario)
             .OrderByDescending(b => b.FechaHora)
             .Take(50)
-            .Select(b => new {
-                b.Id,
-                UsuarioNombre = b.Usuario != null ? b.Usuario.Nombre : "Sistema Automático",
-                b.AccionRealizada,
-                b.Modulo,
-                b.Detalles,
-                b.DireccionIP,
-                FechaHora = b.FechaHora.ToString("dd/MM/yyyy HH:mm:ss")
-            })
             .ToListAsync();
 
-        return Ok(logs);
+        var result = logs.Select(b => new {
+            b.Id,
+            UsuarioNombre = b.Usuario != null ? b.Usuario.Nombre : "Sistema Automático",
+            b.AccionRealizada,
+            b.Modulo,
+            b.Detalles,
+            b.DireccionIP,
+            FechaHora = b.FechaHora.ToString("dd/MM/yyyy HH:mm:ss")
+        });
+
+        return Ok(result);
     }
 
     [HttpPost]
