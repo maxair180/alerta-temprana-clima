@@ -2,7 +2,7 @@ namespace ClimaApi.Models;
 
 public class BitacoraAccion
 {
-    public long Id { get; set; }
+    public int Id { get; set; }
     public int? UsuarioId { get; set; }
     public string AccionRealizada { get; set; } = string.Empty;
     public string Modulo { get; set; } = string.Empty;
