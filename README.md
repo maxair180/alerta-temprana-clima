@@ -16,7 +16,7 @@
 | Integrante | Rol en el Proyecto | Responsabilidades Principales |
 | :--- | :--- | :--- |
 | **Christian García** (`maxair180`) | **Frontend Engineer** | Diseño UI/UX en Angular 20+, Cliente SignalR, Mapa Georreferenciado y Dashboard en tiempo real. |
-| **Melannie Lorenzana** | **Backend Engineer** | API REST en C# .NET, Entity Framework Core, Hub de SignalR, Simulador en segundo plano y Motor de Alertas. |
+| **Melannie Lorenzana** (`Melannie24`)| **Backend Engineer** | API REST en C# .NET, Entity Framework Core, Hub de SignalR, Simulador en segundo plano y Motor de Alertas. |
 | **Carlos Fernando Cachin** (`CACHIN1563`) | **Database & DevOps** | Diseño Relacional en SQL Server 2022, Procedimientos Almacenados, Paginación, Inmunidad SQL Injection y Docker Compose. |
 
 ---
@@ -113,14 +113,16 @@ El esquema relacional `database/schema.sql` implementa **6 tablas normalizadas**
 
 | Usuario | Correo Electrónico | Contraseña | Rol / Permisos |
 | :--- | :--- | :--- | :--- |
-| **Administrador** | `ccachinm@miumg.edu.gt` | `admin123` | Control total, agregar sensores y reinicio de monitoreo. |
+| **Administrador** | `ccachinm@miumg.edu.gt` | `Admin2026!` | Control total, agregar sensores y reinicio de monitoreo. |
+| **Administrador** | `mlorenzanaa@miumg.edu.gt` | `ROSSE@2026` | Control total, agregar sensores y reinicio de monitoreo. |
+| **Operador de Monitoreo** | `cgarciaf11@miumg.edu.gt` | `YAYA@2026` | Visualización en vivo y atención de alertas. |
 | **Operador de Monitoreo** | `operador@miumg.edu.gt` | `operador123` | Visualización en vivo y atención de alertas. |
 
 ---
 
 ## 🚀 Guía de Instalación y Ejecución
 
-### Opción A: Despliegue con Docker Compose (Recomendado para Evaluación y VPS)
+### Opción A: Despliegue con Docker Compose 
 
 Requisitos: **Docker Desktop** instalado y en ejecución.
 
