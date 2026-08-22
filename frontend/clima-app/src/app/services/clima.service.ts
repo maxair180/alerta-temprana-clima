@@ -326,6 +326,18 @@ export class ClimaService {
         fechaHora: this.formatearFechaHora(new Date(Date.now() - 3600000))
       }
     ]);
+
+    this.cargarBitacoraDesdeApi();
+  }
+
+  public cargarBitacoraDesdeApi() {
+    this.http.get<BitacoraModel[]>(`${this.apiUrl}/bitacora`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => {
+      if (data && data.length > 0) {
+        this.bitacora$.next(data);
+      }
+    });
   }
 
   // =========================================================================
@@ -561,14 +573,22 @@ export class ClimaService {
   public atenderAlerta(id: number) {
     const alertas = this.alertas$.getValue();
     const alerta = alertas.find(a => a.id === id);
-    const usuario = this.usuarioActual$.getValue()?.nombre || 'Carlos Fernando Cachin';
+    const usuario = this.usuarioActual$.getValue();
+    const usuarioId = usuario?.id || 1;
+    const usuarioNombre = usuario?.nombre || 'Carlos Fernando Cachin';
+    
     if (alerta) {
       alerta.atendida = true;
       this.alertas$.next([...alertas]);
+      
+      this.http.put(`${this.apiUrl}/alertas/${id}/atender`, usuarioId).pipe(
+        catchError(() => of(null))
+      ).subscribe();
+
       this.registrarEnBitacora(
         'Alerta Atendida',
         'Monitoreo',
-        `Alerta ${alerta.nivelRiesgo} en ${alerta.sensorNombre} (${alerta.comunidad}) atendida por ${usuario}.`
+        `Alerta ${alerta.nivelRiesgo} en ${alerta.sensorNombre} (${alerta.comunidad}) atendida por ${usuarioNombre}.`
       );
     }
     if (this.alertaEmergente$.getValue()?.id === id) {
@@ -603,18 +623,20 @@ export class ClimaService {
   }
 
   public registrarEnBitacora(accion: string, modulo: string, detalles: string) {
-    const bitacoraActual = this.bitacora$.getValue();
-    const usuario = this.usuarioActual$.getValue()?.nombre || 'Carlos Fernando Cachin (Admin)';
-    const nuevoRegistro: BitacoraModel = {
-      id: Date.now(),
-      usuarioNombre: usuario,
+    const usuario = this.usuarioActual$.getValue();
+    const payload = {
+      usuarioId: usuario?.id || 1,
       accionRealizada: accion,
       modulo: modulo,
       detalles: detalles,
-      direccionIP: '192.168.1.10',
-      fechaHora: this.formatearFechaHora()
+      direccionIP: '192.168.1.10'
     };
-    this.bitacora$.next([nuevoRegistro, ...bitacoraActual.slice(0, 49)]);
+
+    this.http.post(`${this.apiUrl}/bitacora`, payload).pipe(
+      catchError(() => of(null))
+    ).subscribe(() => {
+      this.cargarBitacoraDesdeApi();
+    });
   }
 
   public simularEventoExtremo(tipo: 'Inundacion' | 'Incendio' | 'Tormenta' | 'Helada' | 'Sequia') {

@@ -35,4 +35,19 @@ public class AlertasController : ControllerBase
             .OrderByDescending(h => h.FechaHora)
             .ToListAsync();
     }
+
+    [HttpPut("{id}/atender")]
+    public async Task<IActionResult> AtenderAlerta(int id, [FromBody] int usuarioId)
+    {
+        var alerta = await _context.Alertas.FindAsync(id);
+        if (alerta == null)
+            return NotFound();
+
+        alerta.Atendida = true;
+        alerta.UsuarioAtendioId = usuarioId > 0 ? usuarioId : null;
+        alerta.FechaAtencion = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
 }
