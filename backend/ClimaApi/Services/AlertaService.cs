@@ -79,6 +79,7 @@ public class AlertaService
         // Notificar en tiempo real mediante SignalR
         await _hubContext.Clients.All.SendAsync("RecibirLectura", new
         {
+            AlertaId = nuevaAlerta.Id,
             SensorId = sensor.Id,
             SensorNombre = sensor.Nombre,
             TipoSensor = sensor.TipoSensor,

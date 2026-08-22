@@ -91,6 +91,7 @@ export class ClimaService {
   constructor(private http: HttpClient) {
     this.verificarSesionPrevia();
     this.cargarDatosIniciales();
+    this.cargarAlertasDesdeApi();
     this.iniciarConexionSignalR();
     this.iniciarSimuladorRespaldo();
   }
@@ -340,6 +341,16 @@ export class ClimaService {
     });
   }
 
+  public cargarAlertasDesdeApi() {
+    this.http.get<AlertaModel[]>(`${this.apiUrl}/alertas`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => {
+      if (data && data.length > 0) {
+        this.alertas$.next(data);
+      }
+    });
+  }
+
   // =========================================================================
   // 3. CONEXIÓN SIGNALR CON RECONEXIÓN
   // =========================================================================
@@ -373,6 +384,7 @@ export class ClimaService {
   // 4. PROCESAMIENTO DE LECTURAS Y EVALUACIÓN DE REGLAS
   // =========================================================================
   public procesarLecturaEntrante(data: {
+    alertaId?: number;
     sensorId: number;
     valor: number;
     nivelRiesgo?: 'Verde' | 'Amarillo' | 'Naranja' | 'Rojo';
@@ -394,7 +406,7 @@ export class ClimaService {
     if (sensor.nivelRiesgoActual !== 'Verde') {
       const fechaHoraActual = this.formatearFechaHora();
       const nuevaAlerta: AlertaModel = {
-        id: Date.now(),
+        id: data.alertaId || Date.now(),
         sensorId: sensor.id,
         sensorNombre: sensor.nombre,
         comunidad: sensor.comunidad,
@@ -583,7 +595,9 @@ export class ClimaService {
       
       this.http.put(`${this.apiUrl}/alertas/${id}/atender`, usuarioId).pipe(
         catchError(() => of(null))
-      ).subscribe();
+      ).subscribe(() => {
+        this.cargarAlertasDesdeApi();
+      });
 
       this.registrarEnBitacora(
         'Alerta Atendida',
