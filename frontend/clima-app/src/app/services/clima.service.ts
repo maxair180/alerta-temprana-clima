@@ -135,16 +135,29 @@ export class ClimaService {
       return true;
     }
 
-    if (correo === 'cgarcia@miumg.edu.gt' && contrasenia === 'YAYA@2026') {
+    if (correo === 'cgarciaf11@miumg.edu.gt' && contrasenia === 'YAYA@2026') {
       const usuario: UsuarioAuth = {
         id: 3,
         nombre: 'Christian Garcia',
-        correo: 'cgarcia@miumg.edu.gt',
+        correo: 'cgarciaf11@miumg.edu.gt',
         rol: 'Operador'
       };
       this.usuarioActual$.next(usuario);
       localStorage.setItem('clima_usuario_sesion', JSON.stringify(usuario));
       this.registrarEnBitacora('Inicio de Sesión', 'Seguridad', `Ingreso exitoso como Operador (${correo}).`);
+      return true;
+    }
+
+    if (correo === 'mlorenzanaa@miumg.edu.gt' && contrasenia === 'ROSSE@2026') {
+      const usuario: UsuarioAuth = {
+        id: 4,
+        nombre: 'MELANNIE LORENZANA',
+        correo: 'mlorenzanaa@miumg.edu.gt',
+        rol: 'Administrador'
+      };
+      this.usuarioActual$.next(usuario);
+      localStorage.setItem('clima_usuario_sesion', JSON.stringify(usuario));
+      this.registrarEnBitacora('Inicio de Sesión', 'Seguridad', `Ingreso exitoso como Administrador (${correo}).`);
       return true;
     }
 

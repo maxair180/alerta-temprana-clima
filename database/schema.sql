@@ -239,7 +239,9 @@ GO
 INSERT INTO dbo.Usuarios (Nombre, Email, PasswordHash, Rol, Activo)
 VALUES 
 (N'Carlos Fernando Cachin', N'ccachinm@miumg.edu.gt', N'A665A45920422F9D417E4867EFDC4FB8A04A1F3FFF1FA07E998E86F7F7A27AE3', N'Administrador', 1),
-(N'Operador de Monitoreo', N'operador@miumg.edu.gt', N'7110EDA4D09E062AA5E4A390B0A572AC0D2C0220AC529241BE07FAAA4AA33126', N'Operador', 1);
+(N'Operador de Monitoreo', N'operador@miumg.edu.gt', N'7110EDA4D09E062AA5E4A390B0A572AC0D2C0220AC529241BE07FAAA4AA33126', N'Operador', 1),
+(N'Christian Garcia', N'cgarciaf11@miumg.edu.gt', N'E2AE6C3156F1230E0164CA3F9D3E5E1C5EBC4E47E04EB46128BD5ED334586C86', N'Operador', 1),
+(N'MELANNIE LORENZANA', N'mlorenzanaa@miumg.edu.gt', N'9CF840ED25DE225B61216D46E2643F24478FD131F9EF6D80695B42D9CA9D9484', N'Administrador', 1);
 
 -- 5 Sensores vinculados al Administrador (UsuarioId = 1) en Villa Canales
 INSERT INTO dbo.Sensores (UsuarioId, Nombre, CodigoIdentificador, Ubicacion, Latitud, Longitud, TipoSensor, UnidadMedida, ValorMinimo, ValorMaximo, Estado)
