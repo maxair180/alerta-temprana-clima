@@ -19,20 +19,7 @@ services:
     networks:
       - clima_network
 
-  # ===========================================================================
-  # 2. INICIALIZADOR AUTOMÁTICO DE BASE DE DATOS (SEED & SCHEMA)
-  # ===========================================================================
-  db-init:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: clima_db_init
-    depends_on:
-      - database
-    volumes:
-      - ../database/schema.sql:/usr/src/app/schema.sql
-      - ./db-init.sh:/usr/src/app/db-init.sh
-    entrypoint: ["/bin/bash", "/usr/src/app/db-init.sh"]
-    networks:
-      - clima_network
+
 
   # ===========================================================================
   # 3. BACKEND: C# .NET Web API + SignalR + BackgroundService
@@ -50,8 +37,7 @@ services:
     ports:
       - "5000:8080"
     depends_on:
-      db-init:
-        condition: service_completed_successfully
+      - database
     networks:
       - clima_network
 
@@ -66,10 +52,15 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - backend
     networks:
       - clima_network
+    volumes:
+      - /etc/letsencrypt/live/villacanales-clima.duckdns.org/fullchain.pem:/etc/nginx/ssl/nginx-selfsigned.crt:ro
+      - /etc/letsencrypt/live/villacanales-clima.duckdns.org/privkey.pem:/etc/nginx/ssl/nginx-selfsigned.key:ro
+
 
 volumes:
   sql_data:

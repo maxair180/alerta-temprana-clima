@@ -2,9 +2,11 @@ using ClimaApi.Data;
 using ClimaApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ClimaApi.Controllers;
 
+[Authorize(Roles = "Administrador")]
 [ApiController]
 [Route("api/[controller]")]
 public class BitacoraController : ControllerBase
@@ -26,13 +28,13 @@ public class BitacoraController : ControllerBase
             .ToListAsync();
 
         var result = logs.Select(b => new {
-            b.Id,
-            UsuarioNombre = b.Usuario != null ? b.Usuario.Nombre : "Sistema Automático",
-            b.AccionRealizada,
-            b.Modulo,
-            b.Detalles,
-            b.DireccionIP,
-            FechaHora = b.FechaHora.ToString("dd/MM/yyyy HH:mm:ss")
+            id = b.Id,
+            usuarioNombre = b.Usuario != null ? b.Usuario.Nombre : "Sistema Automático",
+            accionRealizada = b.Accion,
+            modulo = b.Entidad,
+            detalles = b.Descripcion,
+            direccionIP = "127.0.0.1", // Mock o extraer del HttpContext si es necesario
+            fechaHora = b.FechaHora.ToString("dd/MM/yyyy HH:mm:ss")
         });
 
         return Ok(result);
@@ -44,10 +46,10 @@ public class BitacoraController : ControllerBase
         var bitacora = new BitacoraAccion
         {
             UsuarioId = dto.UsuarioId > 0 ? dto.UsuarioId : null,
-            AccionRealizada = dto.AccionRealizada,
-            Modulo = dto.Modulo,
-            Detalles = dto.Detalles,
-            DireccionIP = dto.DireccionIP ?? "192.168.1.10",
+            Accion = dto.Accion,
+            Entidad = dto.Entidad,
+            Identificador = dto.Identificador,
+            Descripcion = dto.Descripcion,
             FechaHora = DateTime.UtcNow
         };
 
@@ -61,8 +63,8 @@ public class BitacoraController : ControllerBase
 public class BitacoraDto
 {
     public int? UsuarioId { get; set; }
-    public string AccionRealizada { get; set; } = string.Empty;
-    public string Modulo { get; set; } = string.Empty;
-    public string Detalles { get; set; } = string.Empty;
-    public string? DireccionIP { get; set; }
+    public string Accion { get; set; } = string.Empty;
+    public string Entidad { get; set; } = string.Empty;
+    public string Identificador { get; set; } = string.Empty;
+    public string Descripcion { get; set; } = string.Empty;
 }

@@ -156,12 +156,13 @@ export class App implements OnInit, OnDestroy {
       return;
     }
 
-    const exito = this.climaService.login(correoLimpio, claveLimpia);
-    if (!exito) {
-      this.loginError = 'Credenciales inválidas. Verifica tu correo y contraseña.';
-    } else {
-      this.loginForm = { correo: '', contrasenia: '' };
-    }
+    this.climaService.login(correoLimpio, claveLimpia).subscribe(exito => {
+      if (!exito) {
+        this.loginError = 'Credenciales inválidas. Verifica tu correo y contraseña.';
+      } else {
+        this.loginForm = { correo: '', contrasenia: '' };
+      }
+    });
   }
 
   public cerrarSesion() {
