@@ -7,5 +7,7 @@ public class Usuario
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string Rol { get; set; } = "Operador";
-    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow.AddHours(-6);
+    public DateTime? UltimoAcceso { get; set; }
+    public bool Estado { get; set; } = true;
 }

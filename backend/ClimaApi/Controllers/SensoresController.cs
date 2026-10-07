@@ -2,9 +2,11 @@ using ClimaApi.Data;
 using ClimaApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ClimaApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class SensoresController : ControllerBase
