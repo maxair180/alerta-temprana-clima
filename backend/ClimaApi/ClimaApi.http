@@ -1,0 +1,6 @@
+@ClimaApi_HostAddress = http://localhost:5288
+
+GET {{ClimaApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
