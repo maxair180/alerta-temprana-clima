@@ -13,12 +13,27 @@ RUN node build.js
 # Servidor web Nginx ligero para producción
 FROM nginx:alpine AS runtime
 
+# Generar certificado auto-firmado para HTTPS
+RUN apk add --no-cache openssl && \
+    mkdir -p /etc/nginx/ssl && \
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/nginx/ssl/nginx-selfsigned.key \
+    -out /etc/nginx/ssl/nginx-selfsigned.crt \
+    -subj "/C=GT/ST=Guatemala/L=Guatemala/O=ClimaSafe/OU=IT/CN=villacanales-clima.duckdns.org"
+
 COPY --from=build /app/dist/clima-app/browser /usr/share/nginx/html
 
-# Configuración de Nginx para Single Page Application (SPA) y HTTP Proxy
+# Configuración de Nginx para Single Page Application (SPA) y HTTPS
 RUN echo 'server { \
     listen 80; \
     server_name _; \
+    return 301 https://$host$request_uri; \
+} \
+server { \
+    listen 443 ssl; \
+    server_name _; \
+    ssl_certificate /etc/nginx/ssl/nginx-selfsigned.crt; \
+    ssl_certificate_key /etc/nginx/ssl/nginx-selfsigned.key; \
     location /api/ { \
         proxy_pass http://backend:8080/api/; \
         proxy_http_version 1.1; \
@@ -40,5 +55,5 @@ RUN echo 'server { \
     } \
 }' > /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+EXPOSE 80 443
 CMD ["nginx", "-g", "daemon off;"]
