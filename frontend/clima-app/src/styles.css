@@ -1,1 +1,148 @@
-/* You can add global styles to this file, and also import other style files */
+/* ==========================================================================
+   DESIGN SYSTEM & GLOBAL STYLES - CLIMASAFE RURAL (MINIMALIST & MODERN)
+   ========================================================================== */
+
+:root {
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Outfit', var(--font-sans);
+
+  /* Color Palette - Minimalist Dark Mode with Nature & Risk Accents */
+  --bg-primary: #0b0f17;
+  --bg-secondary: #111827;
+  --bg-card: rgba(17, 24, 39, 0.75);
+  --bg-card-hover: rgba(31, 41, 55, 0.85);
+  --bg-glass: rgba(255, 255, 255, 0.04);
+  
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(59, 130, 246, 0.5);
+
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+
+  /* Risk Colors (Normalized) */
+  --color-verde: #10b981;
+  --color-verde-bg: rgba(16, 185, 129, 0.12);
+  --color-verde-border: rgba(16, 185, 129, 0.3);
+
+  --color-amarillo: #f59e0b;
+  --color-amarillo-bg: rgba(245, 158, 11, 0.12);
+  --color-amarillo-border: rgba(245, 158, 11, 0.3);
+
+  --color-naranja: #f97316;
+  --color-naranja-bg: rgba(249, 115, 22, 0.12);
+  --color-naranja-border: rgba(249, 115, 22, 0.35);
+
+  --color-rojo: #ef4444;
+  --color-rojo-bg: rgba(239, 68, 68, 0.15);
+  --color-rojo-border: rgba(239, 68, 68, 0.4);
+
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-glow-red: 0 0 20px rgba(239, 68, 68, 0.35);
+  --shadow-glow-orange: 0 0 20px rgba(249, 115, 22, 0.3);
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* Custom Minimalist Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Keyframes */
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes pulse-emergency {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); border-color: rgba(239, 68, 68, 0.8); }
+  70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); border-color: rgba(239, 68, 68, 0.4); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); border-color: rgba(239, 68, 68, 0.8); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Global utility classes */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-verde {
+  background: var(--color-verde-bg);
+  color: var(--color-verde);
+  border: 1px solid var(--color-verde-border);
+}
+
+.badge-amarillo {
+  background: var(--color-amarillo-bg);
+  color: var(--color-amarillo);
+  border: 1px solid var(--color-amarillo-border);
+}
+
+.badge-naranja {
+  background: var(--color-naranja-bg);
+  color: var(--color-naranja);
+  border: 1px solid var(--color-naranja-border);
+}
+
+.badge-rojo {
+  background: var(--color-rojo-bg);
+  color: var(--color-rojo);
+  border: 1px solid var(--color-rojo-border);
+  animation: pulse-emergency 2s infinite;
+}
