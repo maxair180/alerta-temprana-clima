@@ -55,6 +55,7 @@ public class AlertasController : ControllerBase
     }
 
     [HttpPut("{id}/atender")]
+    [Authorize(Roles = "Administrador,Operador")]
     public async Task<IActionResult> AtenderAlerta(int id, [FromBody] int usuarioId)
     {
         var alerta = await _context.Alertas.FindAsync(id);

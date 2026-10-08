@@ -135,6 +135,11 @@ export class ClimaService {
           localStorage.setItem('token', res.token);
           this.usuarioActual$.next(usuario);
           localStorage.setItem('clima_usuario_sesion', JSON.stringify(usuario));
+          
+          this.cargarAlertasDesdeApi();
+          this.cargarHistorialDesdeApi();
+          this.cargarBitacoraDesdeApi();
+
           observer.next(true);
           observer.complete();
         },
@@ -308,9 +313,7 @@ export class ClimaService {
     this.http.get<BitacoraModel[]>(`${this.apiUrl}/bitacora`).pipe(
       catchError(() => of([]))
     ).subscribe(data => {
-      if (data && data.length > 0) {
-        this.bitacora$.next(data);
-      }
+      this.bitacora$.next(data || []);
     });
   }
 
@@ -318,9 +321,7 @@ export class ClimaService {
     this.http.get<HistorialEventoModel[]>(`${this.apiUrl}/HistorialEventos`).pipe(
       catchError(() => of([]))
     ).subscribe(data => {
-      if (data && data.length > 0) {
-        this.historial$.next(data);
-      }
+      this.historial$.next(data || []);
     });
   }
 
@@ -328,9 +329,7 @@ export class ClimaService {
     this.http.get<AlertaModel[]>(`${this.apiUrl}/alertas`).pipe(
       catchError(() => of([]))
     ).subscribe(data => {
-      if (data && data.length > 0) {
-        this.alertas$.next(data);
-      }
+      this.alertas$.next(data || []);
     });
   }
 
@@ -652,5 +651,11 @@ export class ClimaService {
       valor: valor,
       unidad: ''
     }).subscribe();
+
+    this.registrarEnBitacora(
+      'Simulación de Evento Extremo',
+      'Monitoreo',
+      `Se ha forzado la simulación de un evento de tipo: ${tipo}.`
+    );
   }
 }
