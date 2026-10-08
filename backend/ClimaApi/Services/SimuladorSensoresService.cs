@@ -41,7 +41,7 @@ public class SimuladorSensoresService : BackgroundService
                     {
                         SensorId = sensor.Id,
                         Valor = valorSimulado,
-                        FechaHora = DateTime.UtcNow
+                        FechaHora = DateTime.UtcNow.AddHours(-6)
                     };
 
                     context.Lecturas.Add(lectura);

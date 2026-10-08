@@ -8,4 +8,6 @@ public class Usuario
     public string PasswordHash { get; set; } = string.Empty;
     public string Rol { get; set; } = "Operador";
     public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+    public DateTime? UltimoAcceso { get; set; }
+    public bool Estado { get; set; } = true;
 }

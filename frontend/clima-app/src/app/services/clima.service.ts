@@ -64,15 +64,15 @@ export interface UsuarioAuth {
   id: number;
   nombre: string;
   correo: string;
-  rol: 'Administrador' | 'Operador';
+  rol: 'Administrador' | 'Operador' | 'Consulta';
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class ClimaService {
-  private apiUrl = 'http://villacanales-clima.duckdns.org:5000/api';
-  private hubUrl = 'http://villacanales-clima.duckdns.org:5000/climaHub';
+  private apiUrl = '/api';
+  private hubUrl = '/hubs/climaHub';
   private hubConnection?: signalR.HubConnection;
 
   // Estado Reactivo
@@ -91,9 +91,10 @@ export class ClimaService {
   constructor(private http: HttpClient) {
     this.verificarSesionPrevia();
     this.cargarDatosIniciales();
+    this.cargarHistorialDesdeApi();
     this.cargarAlertasDesdeApi();
     this.iniciarConexionSignalR();
-    this.iniciarSimuladorRespaldo();
+    // this.iniciarSimuladorRespaldo(); // APAGADO: Ahora usa 100% el backend de SQL
   }
 
   private formatearFechaHora(fecha: Date = new Date()): string {
@@ -121,61 +122,33 @@ export class ClimaService {
     }
   }
 
-  public login(correo: string, contrasenia: string): boolean {
-    // Validación de usuarios preconfigurados del proyecto
-    if ((correo === 'ccachinm@miumg.edu.gt' || correo === 'admin@clima.gt') && (contrasenia === 'admin123' || contrasenia === 'Admin2026!')) {
-      const usuario: UsuarioAuth = {
-        id: 1,
-        nombre: 'Carlos Fernando Cachin',
-        correo: 'ccachinm@miumg.edu.gt',
-        rol: 'Administrador'
-      };
-      this.usuarioActual$.next(usuario);
-      localStorage.setItem('clima_usuario_sesion', JSON.stringify(usuario));
-      this.registrarEnBitacora('Inicio de Sesión', 'Seguridad', `Ingreso exitoso como Administrador (${correo}).`);
-      return true;
-    }
+  public login(correo: string, contrasenia: string): Observable<boolean> {
+    return new Observable<boolean>(observer => {
+      this.http.post<any>(`${this.apiUrl}/Auth/login`, { email: correo, password: contrasenia }).subscribe({
+        next: (res) => {
+          const usuario: UsuarioAuth = {
+            id: res.usuario.id,
+            nombre: res.usuario.nombre,
+            correo: res.usuario.email,
+            rol: res.usuario.rol
+          };
+          localStorage.setItem('token', res.token);
+          this.usuarioActual$.next(usuario);
+          localStorage.setItem('clima_usuario_sesion', JSON.stringify(usuario));
+          
+          this.cargarAlertasDesdeApi();
+          this.cargarHistorialDesdeApi();
+          this.cargarBitacoraDesdeApi();
 
-    if (correo === 'cgarciaf11@miumg.edu.gt' && contrasenia === 'YAYA@2026') {
-      const usuario: UsuarioAuth = {
-        id: 3,
-        nombre: 'Christian Garcia',
-        correo: 'cgarciaf11@miumg.edu.gt',
-        rol: 'Operador'
-      };
-      this.usuarioActual$.next(usuario);
-      localStorage.setItem('clima_usuario_sesion', JSON.stringify(usuario));
-      this.registrarEnBitacora('Inicio de Sesión', 'Seguridad', `Ingreso exitoso como Operador (${correo}).`);
-      return true;
-    }
-
-    if (correo === 'mlorenzanaa@miumg.edu.gt' && contrasenia === 'ROSSE@2026') {
-      const usuario: UsuarioAuth = {
-        id: 4,
-        nombre: 'MELANNIE LORENZANA',
-        correo: 'mlorenzanaa@miumg.edu.gt',
-        rol: 'Administrador'
-      };
-      this.usuarioActual$.next(usuario);
-      localStorage.setItem('clima_usuario_sesion', JSON.stringify(usuario));
-      this.registrarEnBitacora('Inicio de Sesión', 'Seguridad', `Ingreso exitoso como Administrador (${correo}).`);
-      return true;
-    }
-
-    if (correo === 'operador@miumg.edu.gt' && contrasenia === 'operador123') {
-      const usuario: UsuarioAuth = {
-        id: 2,
-        nombre: 'Operador de Monitoreo',
-        correo: 'operador@miumg.edu.gt',
-        rol: 'Operador'
-      };
-      this.usuarioActual$.next(usuario);
-      localStorage.setItem('clima_usuario_sesion', JSON.stringify(usuario));
-      this.registrarEnBitacora('Inicio de Sesión', 'Seguridad', `Ingreso exitoso como Operador (${correo}).`);
-      return true;
-    }
-
-    return false;
+          observer.next(true);
+          observer.complete();
+        },
+        error: (err) => {
+          observer.next(false);
+          observer.complete();
+        }
+      });
+    });
   }
 
   public logout() {
@@ -185,6 +158,11 @@ export class ClimaService {
     }
     this.usuarioActual$.next(null);
     localStorage.removeItem('clima_usuario_sesion');
+    localStorage.removeItem('token');
+  }
+
+  public getToken(): string | null {
+    return localStorage.getItem('token');
   }
 
   // =========================================================================
@@ -335,9 +313,15 @@ export class ClimaService {
     this.http.get<BitacoraModel[]>(`${this.apiUrl}/bitacora`).pipe(
       catchError(() => of([]))
     ).subscribe(data => {
-      if (data && data.length > 0) {
-        this.bitacora$.next(data);
-      }
+      this.bitacora$.next(data || []);
+    });
+  }
+
+  public cargarHistorialDesdeApi() {
+    this.http.get<HistorialEventoModel[]>(`${this.apiUrl}/HistorialEventos`).pipe(
+      catchError(() => of([]))
+    ).subscribe(data => {
+      this.historial$.next(data || []);
     });
   }
 
@@ -345,9 +329,7 @@ export class ClimaService {
     this.http.get<AlertaModel[]>(`${this.apiUrl}/alertas`).pipe(
       catchError(() => of([]))
     ).subscribe(data => {
-      if (data && data.length > 0) {
-        this.alertas$.next(data);
-      }
+      this.alertas$.next(data || []);
     });
   }
 
@@ -654,22 +636,26 @@ export class ClimaService {
   }
 
   public simularEventoExtremo(tipo: 'Inundacion' | 'Incendio' | 'Tormenta' | 'Helada' | 'Sequia') {
-    const sensores = this.sensores$.getValue();
-    if (tipo === 'Incendio') {
-      const temp = sensores.find(s => s.tipoSensor === 'Temperatura');
-      if (temp) this.procesarLecturaEntrante({ sensorId: temp.id, valor: 43.5 });
-    } else if (tipo === 'Inundacion') {
-      const rio = sensores.find(s => s.tipoSensor === 'NivelRio');
-      if (rio) this.procesarLecturaEntrante({ sensorId: rio.id, valor: 5.4 });
-    } else if (tipo === 'Tormenta') {
-      const viento = sensores.find(s => s.tipoSensor === 'Viento');
-      if (viento) this.procesarLecturaEntrante({ sensorId: viento.id, valor: 78.0 });
-    } else if (tipo === 'Helada') {
-      const temp = sensores.find(s => s.tipoSensor === 'Temperatura');
-      if (temp) this.procesarLecturaEntrante({ sensorId: temp.id, valor: -3.2 });
-    } else if (tipo === 'Sequia') {
-      const hum = sensores.find(s => s.tipoSensor === 'Humedad');
-      if (hum) this.procesarLecturaEntrante({ sensorId: hum.id, valor: 12.0 });
-    }
+    let sensorId = 1;
+    let valor = 0;
+
+    if (tipo === 'Incendio') { sensorId = 1; valor = 45.0; } // Calor Extremo [40, 100]
+    else if (tipo === 'Sequia') { sensorId = 2; valor = 12.0; }
+    else if (tipo === 'Tormenta') { sensorId = 3; valor = 150.0; } // Viento [70, 200]
+    else if (tipo === 'Inundacion') { sensorId = 5; valor = 15.0; } // NivelRio [5, 20]
+    else if (tipo === 'Helada') { sensorId = 1; valor = -5.0; } // Helada [-20, 0]
+
+    // Enviar directamente al backend para que registre en SQL Server y dispare SignalR
+    this.http.post(`${this.apiUrl}/lecturas`, {
+      sensorId: sensorId,
+      valor: valor,
+      unidad: ''
+    }).subscribe();
+
+    this.registrarEnBitacora(
+      'Simulación de Evento Extremo',
+      'Monitoreo',
+      `Se ha forzado la simulación de un evento de tipo: ${tipo}.`
+    );
   }
 }

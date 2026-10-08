@@ -96,7 +96,9 @@
           <p class="toast-msg">{{ alertaEmergente.mensaje }}</p>
         </div>
         <div class="toast-actions">
-          <button class="btn-attend" (click)="atenderAlerta(alertaEmergente.id)">Atender</button>
+          @if (usuarioActual.rol !== 'Consulta') {
+            <button class="btn-attend" (click)="atenderAlerta(alertaEmergente.id)">Atender</button>
+          }
           <button class="btn-close-toast" (click)="cerrarAlertaEmergente()">✕</button>
         </div>
       </div>
@@ -487,7 +489,11 @@
                       </td>
                       <td>
                         @if (!alerta.atendida) {
-                          <button class="btn-sm-primary" (click)="atenderAlerta(alerta.id)">Atender</button>
+                          @if (usuarioActual.rol !== 'Consulta') {
+                            <button class="btn-sm-primary" (click)="atenderAlerta(alerta.id)">Atender</button>
+                          } @else {
+                            <span class="text-muted">Pendiente</span>
+                          }
                         } @else {
                           <span class="text-muted">Completada</span>
                         }
