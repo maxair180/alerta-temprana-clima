@@ -622,10 +622,10 @@ export class ClimaService {
     const usuario = this.usuarioActual$.getValue();
     const payload = {
       usuarioId: usuario?.id || 1,
-      accionRealizada: accion,
-      modulo: modulo,
-      detalles: detalles,
-      direccionIP: '192.168.1.10'
+      accion: accion,
+      entidad: modulo,
+      identificador: 'N/A',
+      descripcion: detalles
     };
 
     this.http.post(`${this.apiUrl}/bitacora`, payload).pipe(
