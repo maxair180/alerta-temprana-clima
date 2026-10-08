@@ -48,8 +48,12 @@
             class="form-input text-dark">
         </div>
 
-        <button type="submit" class="btn-login-submit">
-          Ingresar al Sistema
+        <button type="submit" class="btn-login-submit" [disabled]="cargandoLogin" [class.btn-loading]="cargandoLogin">
+          @if (cargandoLogin) {
+            <span class="loader"></span> Validando...
+          } @else {
+            Ingresar al Sistema
+          }
         </button>
 
         <div class="security-badge-note">

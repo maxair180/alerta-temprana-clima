@@ -146,6 +146,8 @@ export class App implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
+  public cargandoLogin = false;
+
   public ejecutarLogin() {
     this.loginError = '';
     const correoLimpio = (this.loginForm.correo || '').trim().toLowerCase();
@@ -156,7 +158,9 @@ export class App implements OnInit, OnDestroy {
       return;
     }
 
+    this.cargandoLogin = true;
     this.climaService.login(correoLimpio, claveLimpia).subscribe(exito => {
+      this.cargandoLogin = false;
       if (!exito) {
         this.loginError = 'Credenciales inválidas. Verifica tu correo y contraseña.';
       } else {
