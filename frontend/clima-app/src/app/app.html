@@ -48,9 +48,9 @@
             class="form-input text-dark">
         </div>
 
-        <button type="submit" class="btn-login-submit" [disabled]="loginLoading">
-          @if (loginLoading) {
-            <img src="https://i.gifer.com/ZKZg.gif" width="20" height="20" style="vertical-align: middle; margin-right: 8px; border-radius: 50%;"> Ingresando...
+        <button type="submit" class="btn-login-submit" [disabled]="cargandoLogin" [class.btn-loading]="cargandoLogin">
+          @if (cargandoLogin) {
+            <span class="loader"></span> Validando...
           } @else {
             Ingresar al Sistema
           }
@@ -100,7 +100,9 @@
           <p class="toast-msg">{{ alertaEmergente.mensaje }}</p>
         </div>
         <div class="toast-actions">
-          <button class="btn-attend" (click)="atenderAlerta(alertaEmergente.id)">Atender</button>
+          @if (usuarioActual.rol !== 'Consulta') {
+            <button class="btn-attend" (click)="atenderAlerta(alertaEmergente.id)">Atender</button>
+          }
           <button class="btn-close-toast" (click)="cerrarAlertaEmergente()">✕</button>
         </div>
       </div>
@@ -142,13 +144,6 @@
           }
         </button>
 
-        <div class="demo-selector hide-mobile">
-          <button class="btn-demo" (click)="simularEvento('Inundacion')">🌊 Inundación</button>
-          <button class="btn-demo" (click)="simularEvento('Incendio')">🔥 Incendio</button>
-          <button class="btn-demo" (click)="simularEvento('Tormenta')">🌪️ Tormenta</button>
-          <button class="btn-demo" (click)="simularEvento('Helada')">❄️ Helada</button>
-        </div>
-
         <div class="user-pill">
           <div class="avatar">{{ usuarioActual.nombre.substring(0, 2).toUpperCase() }}</div>
           <div class="user-info hide-mobile">
@@ -176,17 +171,15 @@
           <span>Dashboard</span>
         </button>
 
-        @if (usuarioActual.rol !== 'Consulta' && usuarioActual.rol !== 'Usuario de consulta') {
-          <button class="tab-btn" [class.active]="pestanaActiva === 'alertas'" (click)="pestanaActiva = 'alertas'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-            </svg>
-            <span>Alertas</span>
-            @if (alertas.length > 0) {
-              <span class="tab-badge">{{ alertas.length }}</span>
-            }
-          </button>
-        }
+        <button class="tab-btn" [class.active]="pestanaActiva === 'alertas'" (click)="pestanaActiva = 'alertas'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+          </svg>
+          <span>Alertas</span>
+          @if (alertas.length > 0) {
+            <span class="tab-badge">{{ alertas.length }}</span>
+          }
+        </button>
 
         @if (usuarioActual.rol === 'Administrador') {
           <button class="tab-btn" [class.active]="pestanaActiva === 'historial'" (click)="pestanaActiva = 'historial'">
@@ -211,6 +204,14 @@
             <span>Bitácora</span>
           </button>
         }
+
+        <!-- PESTAÑA: REPORTERÍA PDF -->
+        <button class="tab-btn" [class.active]="pestanaActiva === 'reportes'" (click)="pestanaActiva = 'reportes'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          <span>Reportería (PDF)</span>
+        </button>
       </div>
     </nav>
 
@@ -493,7 +494,11 @@
                       </td>
                       <td>
                         @if (!alerta.atendida) {
-                          <button class="btn-sm-primary" (click)="atenderAlerta(alerta.id)">Atender</button>
+                          @if (usuarioActual.rol !== 'Consulta') {
+                            <button class="btn-sm-primary" (click)="atenderAlerta(alerta.id)">Atender</button>
+                          } @else {
+                            <span class="text-muted">Pendiente</span>
+                          }
                         } @else {
                           <span class="text-muted">Completada</span>
                         }
@@ -617,80 +622,173 @@
         </div>
       }
 
-      <!-- ===================================================================
-           PESTAÑA 4: ADMINISTRACIÓN DE SENSORES Y COMUNIDADES
-           =================================================================== -->
       @if (pestanaActiva === 'admin' && usuarioActual.rol === 'Administrador') {
         <div class="view-panel">
           <div class="view-header">
             <div>
-              <h2>Administración de Sensores y Comunidades</h2>
-              <p>Escalabilidad de estaciones meteorológicas en el Municipio de Villa Canales</p>
+              <h2>Módulo de Administración del Sistema</h2>
+              <p>Control de usuarios autorizados, roles y estaciones meteorológicas de Villa Canales</p>
             </div>
 
-            <button class="btn-primary" (click)="modalAgregarSensor = true">
-              ➕ Agregar Nuevo Sensor
-            </button>
-          </div>
-
-          <div class="table-responsive">
-            <table class="custom-table">
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Nombre del Sensor</th>
-                  <th>Tipo</th>
-                  <th>Ubicación / Aldea</th>
-                  <th>Rango Seguro Mín / Máx</th>
-                  <th>Valor Actual</th>
-                  <th>Estado</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (sensor of sensores; track sensor.id) {
-                  <tr>
-                    <td><code>{{ sensor.codigoIdentificador }}</code></td>
-                    <td><strong>{{ sensor.nombre }}</strong></td>
-                    <td>{{ sensor.tipoSensor }}</td>
-                    <td>📍 {{ sensor.ubicacion }}</td>
-                    <td>
-                      <div class="range-inputs">
-                        <input type="number" [(ngModel)]="sensor.valorMinimo" class="input-sm text-dark">
-                        <span>-</span>
-                        <input type="number" [(ngModel)]="sensor.valorMaximo" class="input-sm text-dark">
-                        <span class="text-muted">{{ sensor.unidadMedida }}</span>
-                      </div>
-                    </td>
-                    <td><strong>{{ sensor.valorActual }} {{ sensor.unidadMedida }}</strong></td>
-                    <td>
-                      <span class="status-tag" [class.attended]="sensor.estado" [class.pending]="!sensor.estado">
-                        {{ sensor.estado ? 'Activo' : 'Inactivo' }}
-                      </span>
-                    </td>
-                    <td>
-                      <button 
-                        class="btn-sm-outline"
-                        [class.btn-danger]="sensor.estado"
-                        (click)="toggleSensor(sensor.id)">
-                        {{ sensor.estado ? 'Desactivar' : 'Activar' }}
-                      </button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-
-          <!-- ZONA LIMPIA DE REINICIO DEL SISTEMA (SIN TEXTO TÉCNICO INNECESARIO) -->
-          <div class="danger-zone-card">
-            <div class="danger-info">
-              <h3>Restablecimiento General de Monitoreo</h3>
+            <div class="admin-subtabs-nav">
+              <button 
+                class="pill-btn" 
+                [class.active]="subPestanaAdmin === 'usuarios'" 
+                (click)="subPestanaAdmin = 'usuarios'; cargarUsuarios()">
+                👥 Gestión de Usuarios
+              </button>
+              <button 
+                class="pill-btn" 
+                [class.active]="subPestanaAdmin === 'sensores'" 
+                (click)="subPestanaAdmin = 'sensores'">
+                📡 Estaciones y Sensores
+              </button>
             </div>
-            <button class="btn-danger-large" (click)="reiniciarSistema()">
-              🔄 Reiniciar Sistema de Monitoreo
-            </button>
           </div>
+
+          <!-- SUB-SECCIÓN: GESTIÓN DE USUARIOS (CREAR / EDITAR) -->
+          @if (subPestanaAdmin === 'usuarios') {
+            <div class="users-management-section">
+              <div class="section-actions-bar">
+                <div class="section-title-desc">
+                  <h3>Directorio de Usuarios del Sistema</h3>
+                  <p>Administración de credenciales, roles asignados y estado de cuenta</p>
+                </div>
+                <button class="btn-primary" (click)="abrirModalCrearUsuario()">
+                  ➕ Crear Nuevo Usuario
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre Completo</th>
+                      <th>Correo Electrónico</th>
+                      <th>Rol en el Sistema</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (u of usuarios; track u.id) {
+                      <tr>
+                        <td><strong>#{{ u.id }}</strong></td>
+                        <td>
+                          <div class="user-cell">
+                            <span class="user-avatar-small">{{ u.nombre.substring(0, 2).toUpperCase() }}</span>
+                            <span class="user-name-text">{{ u.nombre }}</span>
+                          </div>
+                        </td>
+                        <td><code>{{ u.email }}</code></td>
+                        <td>
+                          <span class="role-badge" [ngClass]="'role-' + u.rol.toLowerCase()">
+                            @if (u.rol === 'Administrador') { 🛡️ Administrador }
+                            @else if (u.rol === 'Operador') { 🛠️ Operador }
+                            @else { 👁️ Consulta }
+                          </span>
+                        </td>
+                        <td>
+                          <span class="status-tag" [class.attended]="u.activo !== false" [class.pending]="u.activo === false">
+                            {{ u.activo !== false ? 'Activo' : 'Inactivo' }}
+                          </span>
+                        </td>
+                        <td>
+                          <div class="action-buttons-group">
+                            <button class="btn-sm-outline" (click)="abrirModalEditarUsuario(u)" title="Editar usuario">
+                              ✏️ Editar
+                            </button>
+                            <button 
+                              class="btn-sm-outline"
+                              [class.btn-danger]="u.activo !== false"
+                              (click)="toggleEstadoUsuario(u)">
+                              {{ u.activo !== false ? 'Desactivar' : 'Activar' }}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <!-- SUB-SECCIÓN: SENSORES Y COMUNIDADES -->
+          @if (subPestanaAdmin === 'sensores') {
+            <div class="sensors-management-section">
+              <div class="section-actions-bar">
+                <div class="section-title-desc">
+                  <h3>Estaciones Meteorológicas en Terreno</h3>
+                  <p>Calibración de umbrales seguros por aldea del Municipio de Villa Canales</p>
+                </div>
+                <button class="btn-primary" (click)="modalAgregarSensor = true">
+                  ➕ Agregar Nuevo Sensor
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Código</th>
+                      <th>Nombre del Sensor</th>
+                      <th>Tipo</th>
+                      <th>Ubicación / Aldea</th>
+                      <th>Rango Seguro Mín / Máx</th>
+                      <th>Valor Actual</th>
+                      <th>Estado</th>
+                      <th>Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (sensor of sensores; track sensor.id) {
+                      <tr>
+                        <td><code>{{ sensor.codigoIdentificador }}</code></td>
+                        <td><strong>{{ sensor.nombre }}</strong></td>
+                        <td>{{ sensor.tipoSensor }}</td>
+                        <td>📍 {{ sensor.ubicacion }}</td>
+                        <td>
+                          <div class="range-inputs">
+                            <input type="number" [(ngModel)]="sensor.valorMinimo" class="input-sm text-dark">
+                            <span>-</span>
+                            <input type="number" [(ngModel)]="sensor.valorMaximo" class="input-sm text-dark">
+                            <span class="text-muted">{{ sensor.unidadMedida }}</span>
+                          </div>
+                        </td>
+                        <td><strong>{{ sensor.valorActual }} {{ sensor.unidadMedida }}</strong></td>
+                        <td>
+                          <span class="status-tag" [class.attended]="sensor.estado" [class.pending]="!sensor.estado">
+                            {{ sensor.estado ? 'Activo' : 'Inactivo' }}
+                          </span>
+                        </td>
+                        <td>
+                          <button 
+                            class="btn-sm-outline"
+                            [class.btn-danger]="sensor.estado"
+                            (click)="toggleSensor(sensor.id)">
+                            {{ sensor.estado ? 'Desactivar' : 'Activar' }}
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- ZONA LIMPIA DE REINICIO DEL SISTEMA -->
+              <div class="danger-zone-card">
+                <div class="danger-info">
+                  <h3>Restablecimiento General de Monitoreo</h3>
+                </div>
+                <button class="btn-danger-large" (click)="reiniciarSistema()">
+                  🔄 Reiniciar Sistema de Monitoreo
+                </button>
+              </div>
+            </div>
+          }
+
         </div>
       }
 
@@ -758,9 +856,334 @@
         </div>
       }
 
-    </main>
+      <!-- ===================================================================
+      <!-- ===================================================================
+           PESTAÑA 6: MÓDULO DE REPORTERÍA Y DESCARGA PDF OFICIAL
+           =================================================================== -->
+      @if (pestanaActiva === 'reportes') {
+        <div class="view-reports">
+
+          <!-- Banner Principal de Reportería Ejecutiva -->
+          <div class="reports-header-banner">
+            <div class="reports-banner-text">
+              <div class="badge-fase3-banner">
+                <span>📄 SISTEMA OFICIAL DE REPORTERÍA Y AUDITORÍA DIGITAL</span>
+              </div>
+              <h2>Centro de Emisión y Certificación de Reportes PDF</h2>
+              <p>Generación automatizada de documentación meteorológica institucional mediante microservicio especializado en Python (FastAPI & ReportLab) con persistencia NoSQL en MongoDB. Cada documento incluye foliado oficial, tablas analíticas y hash de verificación SHA-256.</p>
+            </div>
+            <div class="reports-banner-stats">
+              <div class="rep-stat-chip">
+                <span class="rep-stat-num">8</span>
+                <span class="rep-stat-lbl">Plantillas Oficiales</span>
+              </div>
+              <div class="rep-stat-chip">
+                <span class="rep-stat-num">{{ historialReportes.length }}</span>
+                <span class="rep-stat-lbl">En MongoDB NoSQL</span>
+              </div>
+              <div class="rep-stat-chip">
+                <span class="rep-stat-num">SHA-256</span>
+                <span class="rep-stat-lbl">Firma Criptográfica</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTIFICACIÓN DE ÉXITO DE GENERACIÓN -->
+          @if (ultimoReporteGenerado) {
+            <div class="report-success-card">
+              <div class="report-success-icon">📄</div>
+              <div class="report-success-body">
+                <h4>¡Documento PDF Compilado y Certificado Exitosamente!</h4>
+                <p><strong>ID:</strong> {{ ultimoReporteGenerado.reportId }} &bull; <strong>Tipo:</strong> {{ ultimoReporteGenerado.type }} &bull; <strong>Tamaño:</strong> {{ ultimoReporteGenerado.fileSize }} &bull; <strong>Archivo:</strong> {{ ultimoReporteGenerado.fileName }}</p>
+                <span class="cert-hash">🔒 Registro Inmutable en MongoDB &bull; Firma: SHA256-DIGITAL-VERIFIED</span>
+              </div>
+              <div class="report-success-action">
+                <button class="btn-download-pdf-glow" (click)="descargarReporte(ultimoReporteGenerado)">
+                  ⬇️ Descargar PDF Ahora
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- SECCIÓN: CATÁLOGO DE REPORTES DISPONIBLES (RF-REP-01 a RF-REP-08) -->
+          <div class="reports-section-title">
+            <div class="section-title-wrap">
+              <span class="section-dot"></span>
+              <h3>Catálogo de Documentos Meteorológicos Disponibles</h3>
+            </div>
+            <p>Selecciona una plantilla para configurar sus filtros y compilar el documento PDF con datos en tiempo real.</p>
+          </div>
+
+          <div class="report-types-grid">
+            @for (tipo of tiposReportes; track tipo.code) {
+              <div 
+                class="report-type-card" 
+                [class.selected]="reporteSeleccionado === tipo.code"
+                (click)="seleccionarReporte(tipo.code)">
+                <div class="rep-card-top">
+                  <span class="rep-code-badge">{{ tipo.code }}</span>
+                  <div class="rep-icon-circ">
+                    @if (tipo.code === 'RF-REP-01') { 🏘️ }
+                    @else if (tipo.code === 'RF-REP-02') { 📡 }
+                    @else if (tipo.code === 'RF-REP-03') { 📈 }
+                    @else if (tipo.code === 'RF-REP-04') { 🚨 }
+                    @else if (tipo.code === 'RF-REP-05') { ⚡ }
+                    @else if (tipo.code === 'RF-REP-06') { 📶 }
+                    @else if (tipo.code === 'RF-REP-07') { 📊 }
+                    @else { 📑 }
+                  </div>
+                </div>
+                <h4>{{ tipo.name }}</h4>
+                <p>{{ tipo.description }}</p>
+                <div class="rep-card-footer">
+                  <span class="rep-format"><span class="pdf-tag">PDF</span> Compilación Backend</span>
+                  <span class="rep-select-indicator">
+                    @if (reporteSeleccionado === tipo.code) {
+                      <span class="selected-pill">✓ Activo</span>
+                    } @else {
+                      <span class="choose-pill">Seleccionar</span>
+                    }
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- PANEL DE FILTROS DINÁMICOS Y COMPILACIÓN (ESTUDIO DE EMISIÓN) -->
+          <div class="report-filter-panel">
+            <div class="filter-panel-header">
+              <div class="filter-header-left">
+                <span class="config-icon">⚙️</span>
+                <div>
+                  <h4>Parámetros de Emisión Oficial: <span class="active-report-title">{{ reporteSeleccionado }}</span></h4>
+                  <span class="filter-subtitle">Ajusta los criterios de filtrado. La compilación se procesa en el microservicio backend sin sobrecargar el navegador.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="report-studio-layout">
+              <!-- Columna Izquierda: Controles de Filtros -->
+              <div class="filter-controls-col">
+                <div class="filter-grid">
+                  <!-- Filtro de Comunidad -->
+                  <div class="filter-group">
+                    <label>📍 Comunidad / Aldea Asignada:</label>
+                    <select [(ngModel)]="filtrosReporte.comunidad" class="filter-select">
+                      <option value="TODAS">Todas las 13 Aldeas Oficiales</option>
+                      @for (aldea of aldeasVillaCanales; track aldea) {
+                        <option [value]="aldea">{{ aldea }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <!-- Filtro de Tipo de Sensor -->
+                  <div class="filter-group">
+                    <label>🌡️ Variable Meteorológica:</label>
+                    <select [(ngModel)]="filtrosReporte.tipoSensor" class="filter-select">
+                      <option value="TODOS">Todas las Variables Físicas</option>
+                      <option value="Temperatura">Temperatura (°C)</option>
+                      <option value="Humedad">Humedad Relativa (%)</option>
+                      <option value="Viento">Velocidad del Viento (km/h)</option>
+                      <option value="Lluvia">Nivel de Precipitación (mm)</option>
+                      <option value="NivelRio">Nivel de Río / Caudal (m)</option>
+                    </select>
+                  </div>
+
+                  <!-- Filtro de Nivel de Riesgo -->
+                  <div class="filter-group">
+                    <label>🚨 Umbral de Alerta / Riesgo:</label>
+                    <select [(ngModel)]="filtrosReporte.nivelRiesgo" class="filter-select">
+                      <option value="TODOS">Todos los Umbrales</option>
+                      <option value="Verde">🟢 Verde (Normalidad)</option>
+                      <option value="Amarillo">🟡 Amarillo (Precaución)</option>
+                      <option value="Naranja">🟠 Naranja (Alerta Alta)</option>
+                      <option value="Rojo">🔴 Rojo (Emergencia Crítica)</option>
+                    </select>
+                  </div>
+
+                  <!-- Filtro Rango de Fechas -->
+                  <div class="filter-group">
+                    <label>📅 Cobertura Temporal:</label>
+                    <select [(ngModel)]="filtrosReporte.alcance" class="filter-select">
+                      <option value="MUNICIPAL_VILLA_CANALES">Tiempo Real & Acumulado Municipal</option>
+                      <option value="ULTIMAS_24H">Últimas 24 Horas de Monitoreo</option>
+                      <option value="ULTIMOS_7D">Semana Epidemiológica / 7 Días</option>
+                      <option value="MES_ACTUAL">Mes Calendario en Curso</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Columna Derecha: Tarjeta de Resumen y Acción de Descarga -->
+              <div class="compile-action-card">
+                <div class="compile-meta-box">
+                  <div class="meta-row">
+                    <span class="meta-k">Documento:</span>
+                    <span class="meta-v">{{ reporteSeleccionado }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-k">Formato:</span>
+                    <span class="meta-v highlight-pdf">PDF/A Certificado</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-k">Motor Backend:</span>
+                    <span class="meta-v">FastAPI + ReportLab</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-k">Auditoría:</span>
+                    <span class="meta-v">MongoDB NoSQL</span>
+                  </div>
+                </div>
+
+                <button 
+                  class="btn-generate-report" 
+                  [disabled]="generandoPdf" 
+                  (click)="generarReporteSeleccionado()">
+                  @if (generandoPdf) {
+                    <span class="spinner-inline"></span> Compilando en Servidor...
+                  } @else {
+                    📄 Compilar y Descargar PDF
+                  }
+                </button>
+                <span class="report-backend-note">🔒 RNF-REP-01: Generado 100% en backend con firma y foliado oficial.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN: HISTORIAL DE REPORTES GENERADOS (RF-REP-09 & RF-REP-10) -->
+          <div class="reports-history-section">
+            <div class="history-header">
+              <div class="history-title-wrap">
+                <span class="history-icon">🗄️</span>
+                <div>
+                  <h3>Bitácora de Reportes Emitidos</h3>
+                  <p>Registro inmutable persistido en MongoDB NoSQL (Colección <code>generated_reports</code>).</p>
+                </div>
+              </div>
+              <button class="btn-refresh-history" (click)="cargarReportesYIot()">
+                🔄 Actualizar Bitácora
+              </button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="clima-table modern-table">
+                <thead>
+                  <tr>
+                    <th>Folio / ID</th>
+                    <th>Tipo</th>
+                    <th>Título del Documento</th>
+                    <th>Emitido Por</th>
+                    <th>Fecha y Hora</th>
+                    <th>Tamaño</th>
+                    <th>Descargas</th>
+                    <th class="text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (rep of historialReportes; track rep.reportId) {
+                    <tr>
+                      <td><span class="code-pill">{{ rep.reportId }}</span></td>
+                      <td><span class="badge badge-info">{{ rep.type }}</span></td>
+                      <td><strong>{{ rep.title }}</strong></td>
+                      <td>{{ rep.generatedBy }}</td>
+                      <td>{{ rep.generatedAt }}</td>
+                      <td><span class="size-pill">{{ rep.fileSize }}</span></td>
+                      <td>
+                        <span class="download-badge">⬇️ {{ rep.downloadCount }} descargas</span>
+                      </td>
+                      <td class="text-right">
+                        <button class="btn-table-download" (click)="descargarReporte(rep)" title="Descargar documento PDF">
+                          ⬇️ Descargar PDF
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                  @if (historialReportes.length === 0) {
+                    <tr>
+                      <td colspan="8" class="text-center py-5 text-muted empty-state-td">
+                        <div class="empty-state-wrap">
+                          <span class="empty-icon">📁</span>
+                          <p>No hay reportes emitidos en esta sesión. Selecciona una plantilla arriba y haz clic en "Compilar y Descargar PDF".</p>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      }
+
+      </main>
 
     <!-- ======================== MODAL: AGREGAR NUEVO SENSOR ======================== -->
+    <!-- ======================== MODAL: CREAR / EDITAR USUARIO ======================== -->
+    @if (modalUsuario) {
+      <div class="modal-backdrop">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3>{{ editandoUsuario ? '✏️ Editar Usuario' : '➕ Crear Nuevo Usuario' }}</h3>
+            <button class="btn-close" (click)="modalUsuario = false">✕</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Nombre Completo</label>
+              <input 
+                type="text" 
+                [(ngModel)]="usuarioForm.nombre" 
+                placeholder="Ej: Christian Garcia" 
+                class="form-input text-dark">
+            </div>
+
+            <div class="form-group">
+              <label>Correo Electrónico (Login)</label>
+              <input 
+                type="email" 
+                [(ngModel)]="usuarioForm.email" 
+                placeholder="Ej: christian@clima.gt" 
+                class="form-input text-dark">
+            </div>
+
+            <div class="form-group">
+              <label>{{ editandoUsuario ? 'Nueva Contraseña (Dejar en blanco para mantener la actual)' : 'Contraseña de Acceso' }}</label>
+              <input 
+                type="password" 
+                [(ngModel)]="usuarioForm.password" 
+                placeholder="Ingresa la contraseña" 
+                class="form-input text-dark">
+            </div>
+
+            <div class="form-group">
+              <label>Rol y Privilegios en el Sistema</label>
+              <select [(ngModel)]="usuarioForm.rol" class="form-input text-dark select-dark-options">
+                <option value="Administrador">🛡️ Administrador (Acceso total, usuarios, bitácora e historial)</option>
+                <option value="Operador">🛠️ Operador (Monitoreo en vivo, atención de alertas y reportes)</option>
+                <option value="Consulta">👁️ Consulta (Solo visualización de métricas)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Estado de la Cuenta</label>
+              <select [(ngModel)]="usuarioForm.activo" class="form-input text-dark select-dark-options">
+                <option [ngValue]="true">✅ Activo (Permite inicio de sesión)</option>
+                <option [ngValue]="false">⛔ Inactivo (Bloquear acceso)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-outline-white" (click)="modalUsuario = false">Cancelar</button>
+            <button class="btn-primary" (click)="guardarUsuario()">
+              {{ editandoUsuario ? 'Guardar Cambios' : 'Registrar Usuario' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
     @if (modalAgregarSensor) {
       <div class="modal-backdrop">
         <div class="modal-card">
