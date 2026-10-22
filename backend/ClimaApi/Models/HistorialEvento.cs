@@ -3,7 +3,7 @@ namespace ClimaApi.Models;
 public class HistorialEvento
 {
     public int Id { get; set; }
-    public DateTime FechaHora { get; set; } = DateTime.UtcNow;
+    public DateTime FechaHora { get; set; } = DateTime.UtcNow.AddHours(-6);
     public int ComunidadId { get; set; }
     public int SensorId { get; set; }
     public string TipoFenomeno { get; set; } = string.Empty; // Inundacion, Sequia, etc.

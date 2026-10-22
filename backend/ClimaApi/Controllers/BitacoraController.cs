@@ -50,7 +50,7 @@ public class BitacoraController : ControllerBase
             Entidad = dto.Entidad,
             Identificador = dto.Identificador,
             Descripcion = dto.Descripcion,
-            FechaHora = DateTime.UtcNow
+            FechaHora = DateTime.UtcNow.AddHours(-6)
         };
 
         _context.BitacoraAcciones.Add(bitacora);

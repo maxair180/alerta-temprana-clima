@@ -68,7 +68,7 @@ using (var scope = app.Services.CreateScope())
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin2026!"), 
                 Rol = "Administrador", 
                 Estado = true, 
-                FechaCreacion = DateTime.UtcNow 
+                FechaCreacion = DateTime.UtcNow.AddHours(-6) 
             });
             context.Comunidades.Add(new ClimaApi.Models.Comunidad {
                 Nombre = "Villa Canales", Municipio = "Villa Canales", Departamento = "Guatemala", Pais = "Guatemala", CoordenadasGeograficas = "14.482,-90.534", Descripcion = "Central", Estado = true
@@ -78,7 +78,7 @@ using (var scope = app.Services.CreateScope())
             // Sensor base
             var comunidad = context.Comunidades.First();
             context.Sensores.Add(new ClimaApi.Models.Sensor {
-                Nombre = "Sensor Base", Codigo = "SENS-01", TipoSensor = "Temperatura", ComunidadId = comunidad.Id, Ubicacion = "Centro", UnidadMedida = "°C", Estado = true, FechaInstalacion = DateTime.UtcNow, Descripcion = "Sensor inicial"
+                Nombre = "Sensor Base", Codigo = "SENS-01", TipoSensor = "Temperatura", ComunidadId = comunidad.Id, Ubicacion = "Centro", UnidadMedida = "°C", Estado = true, FechaInstalacion = DateTime.UtcNow.AddHours(-6), Descripcion = "Sensor inicial"
             });
             context.SaveChanges();
         }

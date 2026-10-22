@@ -36,7 +36,7 @@ public class UsuariosController : ControllerBase
     public async Task<ActionResult<Usuario>> CreateUsuario(Usuario usuario)
     {
         usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(usuario.PasswordHash);
-        usuario.FechaCreacion = DateTime.UtcNow;
+        usuario.FechaCreacion = DateTime.UtcNow.AddHours(-6);
         _context.Usuarios.Add(usuario);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetUsuario), new { id = usuario.Id }, usuario);

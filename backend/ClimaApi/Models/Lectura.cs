@@ -8,7 +8,7 @@ public class Lectura
     public int SensorId { get; set; }
     public decimal Valor { get; set; }
     public string Unidad { get; set; } = string.Empty;
-    public DateTime FechaHora { get; set; } = DateTime.UtcNow;
+    public DateTime FechaHora { get; set; } = DateTime.UtcNow.AddHours(-6);
     public bool EstadoSensor { get; set; } = true;
 
     [JsonIgnore]

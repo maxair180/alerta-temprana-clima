@@ -12,7 +12,7 @@ public class Alerta
     public decimal? Umbral { get; set; }
     public string Mensaje { get; set; } = string.Empty;
     public string Estado { get; set; } = "Activa"; // Activa, Atendida, Cerrada
-    public DateTime FechaHora { get; set; } = DateTime.UtcNow;
+    public DateTime FechaHora { get; set; } = DateTime.UtcNow.AddHours(-6);
     public int? UsuarioAtendioId { get; set; }
     public int? UsuarioCerroId { get; set; }
 

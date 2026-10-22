@@ -33,7 +33,7 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Credenciales incorrectas o usuario inactivo." });
         }
 
-        usuario.UltimoAcceso = DateTime.UtcNow;
+        usuario.UltimoAcceso = DateTime.UtcNow.AddHours(-6);
         await _context.SaveChangesAsync();
 
         var token = GenerarJwtToken(usuario);
@@ -46,7 +46,7 @@ public class AuthController : ControllerBase
             Entidad = "Auth",
             Identificador = usuario.Email,
             Descripcion = "Inicio de sesión exitoso",
-            FechaHora = DateTime.UtcNow
+            FechaHora = DateTime.UtcNow.AddHours(-6)
         });
         await _context.SaveChangesAsync();
 
@@ -76,7 +76,7 @@ public class AuthController : ControllerBase
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Rol = "Administrador",
             Estado = true,
-            FechaCreacion = DateTime.UtcNow
+            FechaCreacion = DateTime.UtcNow.AddHours(-6)
         };
 
         _context.Usuarios.Add(admin);

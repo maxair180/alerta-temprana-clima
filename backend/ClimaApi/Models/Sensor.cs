@@ -10,7 +10,7 @@ public class Sensor
     public string Ubicacion { get; set; } = string.Empty;
     public string UnidadMedida { get; set; } = string.Empty;
     public bool Estado { get; set; } = true;
-    public DateTime FechaInstalacion { get; set; } = DateTime.UtcNow;
+    public DateTime FechaInstalacion { get; set; } = DateTime.UtcNow.AddHours(-6);
     public string Descripcion { get; set; } = string.Empty;
 
     public Comunidad? Comunidad { get; set; }
