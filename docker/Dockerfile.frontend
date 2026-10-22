@@ -1,5 +1,5 @@
 # ===========================================================================
-# DOCKERFILE FRONTEND: ANGULAR 20+ SPA EN NGINX (LINUX CONTAINER)
+# DOCKERFILE FRONTEND: ANGULAR 22+ SPA EN NGINX CON HTTPS
 # ===========================================================================
 FROM node:22-alpine AS build
 WORKDIR /app
@@ -23,7 +23,7 @@ RUN apk add --no-cache openssl && \
 
 COPY --from=build /app/dist/clima-app/browser /usr/share/nginx/html
 
-# Configuración de Nginx para Single Page Application (SPA) y HTTPS
+# Configuración de Nginx para Single Page Application (SPA), HTTPS y enrutamiento hacia API Gateway
 RUN echo 'server { \
     listen 80; \
     server_name _; \
@@ -34,19 +34,27 @@ server { \
     server_name _; \
     ssl_certificate /etc/nginx/ssl/nginx-selfsigned.crt; \
     ssl_certificate_key /etc/nginx/ssl/nginx-selfsigned.key; \
+    \
+    # Enrutamiento hacia API Gateway (YARP / ASP.NET Core 10) \
     location /api/ { \
-        proxy_pass http://backend:8080/api/; \
+        proxy_pass http://gateway:8080/api/; \
         proxy_http_version 1.1; \
         proxy_set_header Upgrade $http_upgrade; \
         proxy_set_header Connection "upgrade"; \
         proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
     } \
     location /hubs/ { \
-        proxy_pass http://backend:8080/hubs/; \
+        proxy_pass http://gateway:8080/hubs/; \
         proxy_http_version 1.1; \
         proxy_set_header Upgrade $http_upgrade; \
         proxy_set_header Connection "upgrade"; \
         proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
     } \
     location / { \
         root /usr/share/nginx/html; \
@@ -56,4 +64,8 @@ server { \
 }' > /etc/nginx/conf.d/default.conf
 
 EXPOSE 80 443
-CMD ["nginx", "-g", "daemon off;"]
+
+COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+ENTRYPOINT ["/docker-entrypoint.sh"]

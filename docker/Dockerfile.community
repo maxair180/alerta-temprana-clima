@@ -1,0 +1,22 @@
+# ===========================================================================
+# DOCKERFILE COMMUNITY SERVICE (.NET 10 & POSTGRESQL)
+# ===========================================================================
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
+WORKDIR /src
+
+COPY services/community-service/*.csproj services/community-service/
+RUN dotnet restore services/community-service/community-service.csproj
+
+COPY services/community-service/ services/community-service/
+WORKDIR /src/services/community-service
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+
+EXPOSE 5001
+ENV ASPNETCORE_URLS=http://+:5001
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+ENTRYPOINT ["dotnet", "community-service.dll"]

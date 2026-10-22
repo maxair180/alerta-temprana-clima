@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: clima-system
+  labels:
+    app.kubernetes.io/name: clima-safe-rural
+    app.kubernetes.io/part-of: sistema-alerta-temprana
+    environment: production

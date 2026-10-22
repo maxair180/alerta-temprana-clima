@@ -15,3 +15,8 @@ dist/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
+# Guías y Documentación de Defensa
+Guia_Defensa*.md
+Guia_*.md
+backend_logs.txt
+target/

@@ -2,9 +2,11 @@ version: '3.8'
 
 services:
   # ===========================================================================
-  # 1. BASE DE DATOS: SQL Server 2022+ en Linux Container
+  # BASES DE DATOS HETEROGÉNEAS (SQL SERVER, POSTGRESQL & MONGODB NOSQL)
   # ===========================================================================
-  database:
+
+  # 1. SQL Server 2022+ (Persistencia de Sensores y Telemetría IoT)
+  sqlserver-db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: clima_sqlserver
     restart: always
@@ -16,6 +18,195 @@ services:
       - "1433:1433"
     volumes:
       - sql_data:/var/opt/mssql
+      - ../database/init/clima_sqlserver_init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - clima_network
+
+  # 2. PostgreSQL 16 (Auth Service, Community Service & Alert Service)
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: clima_postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=ClimaSafePostgres2026!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../database/init/clima_postgres_init.sql:/docker-entrypoint-initdb.d/01_init.sql
+    networks:
+      - clima_network
+
+  # 3. MongoDB 7.0 (Reportería NoSQL y Bitácora de Auditoría)
+  mongo-db:
+    image: mongo:7.0
+    container_name: clima_mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ../database/init/mongo_init.js:/docker-entrypoint-initdb.d/mongo_init.js
+    networks:
+      - clima_network
+
+  # ===========================================================================
+  # BACKEND MICROSERVICIOS HETEROGÉNEOS (C#, TYPESCRIPT, JAVA, PYTHON)
+  # ===========================================================================
+
+  # 4. API GATEWAY (ASP.NET Core 10 & YARP) - Punto Único de Entrada
+  gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gateway
+    container_name: clima_gateway
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ReverseProxy__Clusters__auth-cluster__Destinations__destination1__Address=http://auth-service:3000
+      - ReverseProxy__Clusters__community-cluster__Destinations__destination1__Address=http://community-service:5001
+      - ReverseProxy__Clusters__sensor-cluster__Destinations__destination1__Address=http://sensor-service:5002
+      - ReverseProxy__Clusters__alert-cluster__Destinations__destination1__Address=http://alert-service:8081
+      - ReverseProxy__Clusters__report-cluster__Destinations__destination1__Address=http://report-service:8000
+      - ReverseProxy__Clusters__audit-cluster__Destinations__destination1__Address=http://audit-service:8001
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - community-service
+      - sensor-service
+      - alert-service
+      - report-service
+      - audit-service
+    networks:
+      - clima_network
+
+  # 5. AUTH SERVICE (Node.js / TypeScript + PostgreSQL + JWT)
+  auth-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.auth
+    container_name: clima_auth_service
+    restart: always
+    environment:
+      - PORT=3000
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=ClimaSafePostgres2026!
+      - DB_NAME=auth_db
+      - JWT_SECRET=ClimaSafe_Secret_Key_Super_Secure_2026_UMG_VillaCanales!
+    depends_on:
+      - postgres-db
+    networks:
+      - clima_network
+
+  # 6. COMMUNITY SERVICE (.NET 10 + PostgreSQL)
+  community-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.community
+    container_name: clima_community_service
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5001
+      - ConnectionStrings__PostgresConnection=Host=postgres-db;Port=5432;Database=community_db;Username=postgres;Password=ClimaSafePostgres2026!
+    depends_on:
+      - postgres-db
+    networks:
+      - clima_network
+
+  # 7. SENSOR SERVICE (.NET 10 + SQL Server + SignalR + Ingesta IoT)
+  sensor-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.sensor
+    container_name: clima_sensor_service
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5002
+      - ConnectionStrings__DefaultConnection=Server=sqlserver-db,1433;Database=SensorDB;User Id=sa;Password=ClimaDB_Secure2026!;TrustServerCertificate=True;
+      - Services__AlertService=http://alert-service:8081
+      - Services__AuditService=http://audit-service:8001
+    depends_on:
+      - sqlserver-db
+    networks:
+      - clima_network
+
+  # 8. ALERT SERVICE (Java Spring Boot + PostgreSQL)
+  alert-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.alert
+    container_name: clima_alert_service
+    restart: always
+    environment:
+      - PORT=8081
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - DB_NAME=alert_db
+      - DB_USER=postgres
+      - DB_PASSWORD=ClimaSafePostgres2026!
+    depends_on:
+      - postgres-db
+    networks:
+      - clima_network
+
+  # 9. REPORT SERVICE (Python FastAPI + MongoDB NoSQL + ReportLab/WeasyPrint)
+  report-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.report
+    container_name: clima_report_service
+    restart: always
+    environment:
+      - PORT=8000
+      - MONGO_URI=mongodb://mongo-db:27017
+      - COMMUNITY_SERVICE_URL=http://community-service:5001
+      - SENSOR_SERVICE_URL=http://sensor-service:5002
+      - ALERT_SERVICE_URL=http://alert-service:8081
+    volumes:
+      - report_storage:/app/storage/reports
+    depends_on:
+      - mongo-db
+    networks:
+      - clima_network
+
+  # 10. AUDIT SERVICE (Python FastAPI + MongoDB NoSQL)
+  audit-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.audit
+    container_name: clima_audit_service
+    restart: always
+    environment:
+      - PORT=8001
+      - MONGO_URI=mongodb://mongo-db:27017
+    depends_on:
+      - mongo-db
+    networks:
+      - clima_network
+
+  # ===========================================================================
+  # FRONTEND: ANGULAR 22+ SPA EN NGINX CON HTTPS
+  # ===========================================================================
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: clima_frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/nginx/ssl/custom:ro
+    depends_on:
+      - gateway
     networks:
       - clima_network
 
@@ -62,6 +253,12 @@ services:
 
 volumes:
   sql_data:
+    driver: local
+  postgres_data:
+    driver: local
+  mongo_data:
+    driver: local
+  report_storage:
     driver: local
 
 networks:

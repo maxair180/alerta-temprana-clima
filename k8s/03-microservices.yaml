@@ -1,0 +1,318 @@
+# ============================================================================
+# KUBERNETES MANIFEST: MICROSERVICIOS STATELESS (FASE 3 & PREPARACIÓN FASE 4)
+# ============================================================================
+
+# 1. API GATEWAY (ASP.NET CORE 10 & YARP)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: clima-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: gateway
+          image: climasafe/api-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: clima-global-config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: clima-system
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - port: 8080
+      targetPort: 8080
+
+# 2. AUTH SERVICE (NODE.JS / NESTJS / POSTGRESQL)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: clima-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth
+          image: climasafe/auth-service:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DB_HOST
+              value: "postgres-db"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: clima-secrets
+                  key: JWT_SECRET
+          livenessProbe:
+            httpGet:
+              path: /api/auth/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: clima-system
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 3000
+      targetPort: 3000
+
+# 3. COMMUNITY SERVICE (.NET 10 / POSTGRESQL)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: community-service
+  namespace: clima-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: community-service
+  template:
+    metadata:
+      labels:
+        app: community-service
+    spec:
+      containers:
+        - name: community
+          image: climasafe/community-service:latest
+          ports:
+            - containerPort: 5001
+          livenessProbe:
+            httpGet:
+              path: /api/communities/health
+              port: 5001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: community-service
+  namespace: clima-system
+spec:
+  selector:
+    app: community-service
+  ports:
+    - port: 5001
+      targetPort: 5001
+
+# 4. SENSOR SERVICE (.NET 10 / SQL SERVER / SIGNALR)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sensor-service
+  namespace: clima-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sensor-service
+  template:
+    metadata:
+      labels:
+        app: sensor-service
+    spec:
+      containers:
+        - name: sensor
+          image: climasafe/sensor-service:latest
+          ports:
+            - containerPort: 5002
+          livenessProbe:
+            httpGet:
+              path: /api/sensors/health
+              port: 5002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sensor-service
+  namespace: clima-system
+spec:
+  selector:
+    app: sensor-service
+  ports:
+    - port: 5002
+      targetPort: 5002
+
+# 5. ALERT SERVICE (JAVA SPRING BOOT / POSTGRESQL)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-service
+  namespace: clima-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: alert-service
+  template:
+    metadata:
+      labels:
+        app: alert-service
+    spec:
+      containers:
+        - name: alert
+          image: climasafe/alert-service:latest
+          ports:
+            - containerPort: 8081
+          livenessProbe:
+            httpGet:
+              path: /api/alerts/health
+              port: 8081
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-service
+  namespace: clima-system
+spec:
+  selector:
+    app: alert-service
+  ports:
+    - port: 8081
+      targetPort: 8081
+
+# 6. REPORT SERVICE (PYTHON FASTAPI / MONGODB)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: report-service
+  namespace: clima-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: report-service
+  template:
+    metadata:
+      labels:
+        app: report-service
+    spec:
+      containers:
+        - name: report
+          image: climasafe/report-service:latest
+          ports:
+            - containerPort: 8000
+          livenessProbe:
+            httpGet:
+              path: /api/reports/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: report-service
+  namespace: clima-system
+spec:
+  selector:
+    app: report-service
+  ports:
+    - port: 8000
+      targetPort: 8000
+
+# 7. AUDIT SERVICE (PYTHON FASTAPI / MONGODB)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audit-service
+  namespace: clima-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: audit-service
+  template:
+    metadata:
+      labels:
+        app: audit-service
+    spec:
+      containers:
+        - name: audit
+          image: climasafe/audit-service:latest
+          ports:
+            - containerPort: 8001
+          livenessProbe:
+            httpGet:
+              path: /api/audit/health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: audit-service
+  namespace: clima-system
+spec:
+  selector:
+    app: audit-service
+  ports:
+    - port: 8001
+      targetPort: 8001

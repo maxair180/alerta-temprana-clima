@@ -1,0 +1,22 @@
+# ===========================================================================
+# DOCKERFILE API GATEWAY (ASP.NET Core 10 & YARP)
+# ===========================================================================
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
+WORKDIR /src
+
+COPY services/api-gateway/*.csproj services/api-gateway/
+RUN dotnet restore services/api-gateway/api-gateway.csproj
+
+COPY services/api-gateway/ services/api-gateway/
+WORKDIR /src/services/api-gateway
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+ENTRYPOINT ["dotnet", "api-gateway.dll"]

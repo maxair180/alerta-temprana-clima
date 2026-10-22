@@ -1,0 +1,22 @@
+# ===========================================================================
+# DOCKERFILE SENSOR SERVICE (.NET 10, SQL SERVER & SIGNALR)
+# ===========================================================================
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
+WORKDIR /src
+
+COPY services/sensor-service/*.csproj services/sensor-service/
+RUN dotnet restore services/sensor-service/sensor-service.csproj
+
+COPY services/sensor-service/ services/sensor-service/
+WORKDIR /src/services/sensor-service
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+
+EXPOSE 5002
+ENV ASPNETCORE_URLS=http://+:5002
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+ENTRYPOINT ["dotnet", "sensor-service.dll"]
