@@ -18,5 +18,7 @@ dist/
 # Guías y Documentación de Defensa
 Guia_Defensa*.md
 Guia_*.md
+Guia_*.pdf
+*.pdf
 backend_logs.txt
 target/
