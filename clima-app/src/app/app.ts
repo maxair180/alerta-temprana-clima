@@ -165,6 +165,10 @@ export class App implements OnInit, OnDestroy {
     });
   }
 
+  public iniciarOAuth(provider: 'google' | 'github' | 'microsoft') {
+    this.climaService.iniciarLoginOAuth(provider);
+  }
+
   public cerrarSesion() {
     this.climaService.logout();
     this.loginForm = { correo: '', contrasenia: '' };

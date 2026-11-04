@@ -999,3 +999,92 @@
     gap: 12px;
   }
 }
+
+/* ============================================================================
+   FASE 4: BOTONES DE IDENTIDAD FEDERADA OAUTH 2.0 / OPENID CONNECT
+   ============================================================================ */
+.oauth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0 16px 0;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.oauth-divider::before,
+.oauth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #334155;
+}
+
+.oauth-divider span {
+  padding: 0 12px;
+}
+
+.oauth-buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.btn-oauth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  outline: none;
+}
+
+.btn-oauth .oauth-icon {
+  flex-shrink: 0;
+}
+
+.btn-google {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: #e5e7eb;
+}
+
+.btn-google:hover {
+  background: #f9fafb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-github {
+  background: #24292e;
+  color: #ffffff;
+  border-color: #3f4448;
+}
+
+.btn-github:hover {
+  background: #2f363d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-microsoft {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+.btn-microsoft:hover {
+  background: #334155;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+}

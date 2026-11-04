@@ -64,7 +64,9 @@ export interface UsuarioAuth {
   id: number;
   nombre: string;
   correo: string;
-  rol: 'Administrador' | 'Operador';
+  rol: 'Administrador' | 'Operador' | 'Consulta' | string;
+  roles?: string[];
+  provider?: string;
 }
 
 @Injectable({
@@ -111,6 +113,41 @@ export class ClimaService {
   // 1. GESTIÓN DE AUTENTICACIÓN / LOGIN
   // =========================================================================
   private verificarSesionPrevia() {
+    // 1. Detección de retorno de autenticación federada (OAuth 2.0 / OpenID Connect)
+    if (typeof window !== 'undefined' && window.location && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const tokenParam = params.get('token');
+      const providerParam = params.get('provider') || 'oauth';
+
+      if (tokenParam) {
+        try {
+          const parts = tokenParam.split('.');
+          if (parts.length === 3) {
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            const usuario: UsuarioAuth = {
+              id: parseInt(payload.sub?.replace('user-', '') || payload.id || '1'),
+              nombre: payload.name || payload.nombre || 'Usuario Federado',
+              correo: payload.email || '',
+              rol: (payload.roles && payload.roles.includes('ADMIN')) ? 'Administrador' : (payload.rol || 'Operador'),
+              roles: payload.roles || ['OPERATOR'],
+              provider: payload.provider || providerParam
+            };
+
+            localStorage.setItem('token', tokenParam);
+            localStorage.setItem('clima_usuario_sesion', JSON.stringify(usuario));
+            this.usuarioActual$.next(usuario);
+
+            // Limpiar parámetros de la URL sin recargar
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+          }
+        } catch (e) {
+          console.error('Error procesando token OAuth:', e);
+        }
+      }
+    }
+
+    // 2. Sesión guardada previa
     const sesionGuardada = localStorage.getItem('clima_usuario_sesion');
     if (sesionGuardada) {
       try {
@@ -118,6 +155,12 @@ export class ClimaService {
       } catch (e) {
         localStorage.removeItem('clima_usuario_sesion');
       }
+    }
+  }
+
+  public iniciarLoginOAuth(provider: 'google' | 'github' | 'microsoft') {
+    if (typeof window !== 'undefined') {
+      window.location.href = /api/auth/oauth/;
     }
   }
 
